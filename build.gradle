@@ -42,7 +42,7 @@ shadowJar {
 }
 
 application {
-    mainClassName = 'no.nav.sf.oppgave.MainKt'
+    mainClassName = 'no.nav.sf.brukernotifikasjon.MainKt'
 }
 
 tasks.withType(JavaExec) {
