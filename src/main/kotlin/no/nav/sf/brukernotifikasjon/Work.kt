@@ -10,6 +10,8 @@ import no.nav.sf.library.POSTFIX_LATEST
 import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
+import no.nav.sf.library.encodeB64
+import no.nav.sf.library.isSuccess
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -112,98 +114,104 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     var cntNullValue = 0
     var cntBigMessage = 0
 
-    // salesforceClient.enablesObjectPost { postActivities ->
+    salesforceClient.enablesObjectPost { postActivities ->
 
-    listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
+        listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
 
-        log.info { "Setup sf-post connection for topic $topic" }
+            log.info { "Setup sf-post connection for topic $topic" }
 
-        val kafkaConsumer = AKafkaConsumer<GenericRecord, GenericRecord>(
-                config = ws.kafkaConfig,
-                fromBeginning = true,
-                topics = listOf(topic)
-        )
+            val kafkaConsumer = AKafkaConsumer<GenericRecord, GenericRecord>(
+                    config = ws.kafkaConfig,
+                    fromBeginning = true,
+                    topics = listOf(topic)
+            )
 
-        currentConsumerMessageHost = topic
+            currentConsumerMessageHost = topic
 
-        val resultOK = kafkaConsumer.consume { cRecords ->
+            var sentFirst = false
 
-            exitReason = ExitReason.NoEvents
-            if (cRecords.isEmpty) return@consume KafkaConsumerStates.IsFinished
+            val resultOK = kafkaConsumer.consume { cRecords ->
 
-            if (!doneOnce) {
-                log.info { "Example record: key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
-            }
-            doneOnce = true
+                exitReason = ExitReason.NoEvents
+                if (cRecords.isEmpty) return@consume KafkaConsumerStates.IsFinished
 
-            exitReason = ExitReason.Work
-            workMetrics.noOfConsumedEvents.inc(cRecords.count().toDouble())
-            // if (topic == topicOpprettet) workMetrics.noOfConsumedEventsOpprettet.inc(cRecords.count().toDouble())
+                if (!doneOnce) {
+                    log.info { "Example record: key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
+                }
+                doneOnce = true
 
-            /*
-            cRecords.filter { it.value()?.length ?: 0 > 100000 }.forEach {
-                log.info { "Encountered big record on $topic" }
-                cntBigMessage++
-                // investigateLog.add("Big record length ${it.value().length} as b64 length: ${it.value().encodeB64().length}")
-            }
+                exitReason = ExitReason.Work
+                workMetrics.noOfConsumedEvents.inc(cRecords.count().toDouble())
+                // if (topic == topicOpprettet) workMetrics.noOfConsumedEventsOpprettet.inc(cRecords.count().toDouble())
 
-            if (cRecords.filter { it.value()?.length ?: 0 < 100000 }.count() == 0) {
-                log.info { "Only big msgs in batch, continue" }
-                return@consume KafkaConsumerStates.IsOk
-            }
-
-             */
-
-            cRecords.filter { it.key() == null }.forEach {
-                cntNullKey++
-            }
-
-            cRecords.filter { it.value() == null }.forEach {
-                cntNullValue++
-            }
-            when (topic) {
-                topicOppgave -> cntOppgave += cRecords.count()
-                topicBeskjed -> cntBeskjed += cRecords.count()
-                topicDone -> cntDone += cRecords.count()
-            }
-
-            if (heartBeatConsumer == 0) {
-                log.info { "Heartbeat consumer $topic - latest successful offset current run: ${kafkaConsumerOffsetRangeBoard[currentConsumerMessageHost + POSTFIX_LATEST]?.second ?: "Unknown"}" }
-            }
-            heartBeatConsumer = (heartBeatConsumer + 1) % 1000
-
-            val body = SFsObjectRest(
-                    records = cRecords.map {
-                        KafkaMessage(
-                                topic = topic,
-                                key = it.key().toString(),
-                                value = it.value().toString()
-                        )
-                    }
-            ).toJson()
-/*
-                when (postActivities(body).isSuccess()) {
-                    true -> {
-                        workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
-                        if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
-                        KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
-                    }
-                    false -> {
-                        log.error { "Failed posting to SF" }
-                        workMetrics.producerIssues.inc()
-                        KafkaConsumerStates.HasIssues
-                    }
+                /*
+                cRecords.filter { it.value()?.length ?: 0 > 100000 }.forEach {
+                    log.info { "Encountered big record on $topic" }
+                    cntBigMessage++
+                    // investigateLog.add("Big record length ${it.value().length} as b64 length: ${it.value().encodeB64().length}")
                 }
 
- */
-            KafkaConsumerStates.IsOk
-        }
-        if (!resultOK) {
-            log.error { "Kafka consumer reports failure" }
-            workMetrics.consumerIssues.inc()
+                if (cRecords.filter { it.value()?.length ?: 0 < 100000 }.count() == 0) {
+                    log.info { "Only big msgs in batch, continue" }
+                    return@consume KafkaConsumerStates.IsOk
+                }
+
+                 */
+
+                cRecords.filter { it.key() == null }.forEach {
+                    cntNullKey++
+                }
+
+                cRecords.filter { it.value() == null }.forEach {
+                    cntNullValue++
+                }
+                when (topic) {
+                    topicOppgave -> cntOppgave += cRecords.count()
+                    topicBeskjed -> cntBeskjed += cRecords.count()
+                    topicDone -> cntDone += cRecords.count()
+                }
+
+                if (heartBeatConsumer == 0) {
+                    log.info { "Heartbeat consumer $topic - latest successful offset current run: ${kafkaConsumerOffsetRangeBoard[currentConsumerMessageHost + POSTFIX_LATEST]?.second ?: "Unknown"}" }
+                }
+                heartBeatConsumer = (heartBeatConsumer + 1) % 1000
+
+                if (!sentFirst) {
+                    sentFirst = true
+
+                    val body = SFsObjectRest(
+                            records = listOf(cRecords.first().let {
+                                KafkaMessage(
+                                        topic = topic,
+                                        key = it.key().toString().encodeB64(),
+                                        value = it.value().toString().encodeB64()
+                                )
+                            })
+                    ).toJson()
+
+                    when (postActivities(body).isSuccess()) {
+                        true -> {
+                            log.info { "Successful post on topic $topic" }
+                            workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
+                            // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
+                            KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
+                        }
+                        false -> {
+                            log.error { "Failed posting to SF" }
+                            workMetrics.producerIssues.inc()
+                            KafkaConsumerStates.HasIssues
+                        }
+                    }
+                } else {
+                    KafkaConsumerStates.IsOk
+                }
+            }
+            if (!resultOK) {
+                log.error { "Kafka consumer reports failure" }
+                workMetrics.consumerIssues.inc()
+            }
         }
     }
-    // }
     // File("/tmp/investigate").writeText(msg + msg2)
     log.info { "Work session finished - nullKey: $cntNullKey, nullValue: $cntNullValue, cntBigMessage: $cntBigMessage, cnt total: ${cntBeskjed + cntOppgave + cntDone}, beskjed: $cntBeskjed, oppgave: $cntOppgave, done: $cntDone - published ${workMetrics.noOfPostedEvents.get().toInt()} events" }
 
