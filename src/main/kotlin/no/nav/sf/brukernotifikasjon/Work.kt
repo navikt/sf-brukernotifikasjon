@@ -10,8 +10,8 @@ import no.nav.sf.library.POSTFIX_LATEST
 import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
-import no.nav.sf.library.encodeB64
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 
 private val log = KotlinLogging.logger {}
@@ -84,6 +84,8 @@ val topicDone = System.getenv("KAFKA_TOPIC_DONE")
 
 var runOnce = false
 
+var doneOnce = false
+
 var msg = "Msg without Key:\n"
 var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
@@ -116,7 +118,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
         log.info { "Setup sf-post connection for topic $topic" }
 
-        val kafkaConsumer = AKafkaConsumer<String, String>(
+        val kafkaConsumer = AKafkaConsumer<GenericRecord, GenericRecord>(
                 config = ws.kafkaConfig,
                 fromBeginning = true,
                 topics = listOf(topic)
@@ -129,10 +131,16 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
             exitReason = ExitReason.NoEvents
             if (cRecords.isEmpty) return@consume KafkaConsumerStates.IsFinished
 
+            if (!doneOnce) {
+                log.info { "Example record: key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
+            }
+            doneOnce = true
+
             exitReason = ExitReason.Work
             workMetrics.noOfConsumedEvents.inc(cRecords.count().toDouble())
             // if (topic == topicOpprettet) workMetrics.noOfConsumedEventsOpprettet.inc(cRecords.count().toDouble())
 
+            /*
             cRecords.filter { it.value()?.length ?: 0 > 100000 }.forEach {
                 log.info { "Encountered big record on $topic" }
                 cntBigMessage++
@@ -143,6 +151,8 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                 log.info { "Only big msgs in batch, continue" }
                 return@consume KafkaConsumerStates.IsOk
             }
+
+             */
 
             cRecords.filter { it.key() == null }.forEach {
                 cntNullKey++
@@ -163,11 +173,11 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
             heartBeatConsumer = (heartBeatConsumer + 1) % 1000
 
             val body = SFsObjectRest(
-                    records = cRecords.filter { it.value() != null && it.value()?.length ?: 0 < 100000 }.map {
+                    records = cRecords.map {
                         KafkaMessage(
                                 topic = topic,
                                 key = it.key().toString(),
-                                value = it.value().encodeB64()
+                                value = it.value().toString()
                         )
                     }
             ).toJson()
