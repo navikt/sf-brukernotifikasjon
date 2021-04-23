@@ -1,5 +1,6 @@
 package no.nav.sf.brukernotifikasjon
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.prometheus.client.Gauge
 import mu.KotlinLogging
 import no.nav.sf.library.AKafkaConsumer
@@ -12,8 +13,6 @@ import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.common.serialization.LongDeserializer
-import org.apache.kafka.common.serialization.StringDeserializer
 
 private val log = KotlinLogging.logger {}
 
@@ -26,8 +25,9 @@ sealed class ExitReason {
 
 data class WorkSettings(
     val kafkaConfig: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to LongDeserializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
+            "schema.registry.url" to "https://kafka-schema-registry.nais-q.adeo.no"
     ) // ,
         // val sfClient: SalesforceClient = SalesforceClient()
 )
@@ -116,7 +116,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
         log.info { "Setup sf-post connection for topic $topic" }
 
-        val kafkaConsumer = AKafkaConsumer<Long, String>(
+        val kafkaConsumer = AKafkaConsumer<String, String>(
                 config = ws.kafkaConfig,
                 fromBeginning = true,
                 topics = listOf(topic)
