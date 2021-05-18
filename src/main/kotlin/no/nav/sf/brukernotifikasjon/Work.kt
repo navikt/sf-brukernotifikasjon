@@ -11,7 +11,6 @@ import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
-import no.nav.sf.library.isSuccess
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -189,9 +188,9 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                             })
                     ).toJson()
 
-                    when (postActivities(body).isSuccess()) {
+                    when (true/*postActivities(body).isSuccess()*/) {
                         true -> {
-                            log.info { "Successful post on topic $topic" }
+                            log.info { "DRY RUN Successful post on topic $topic" }
                             workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
                             // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
                             KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
