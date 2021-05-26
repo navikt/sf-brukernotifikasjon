@@ -25,7 +25,7 @@ sealed class ExitReason {
     object Work : ExitReason()
 }
 
-val kafkaSchemaReg = AnEnvironment.getEnvOrDefault("KAFKA_SCHEMA_REG","http://localhost:8081")
+val kafkaSchemaReg = AnEnvironment.getEnvOrDefault("KAFKA_SCHEMA_REG", "http://localhost:8081")
 
 data class WorkSettings(
     val kafkaConfig: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
