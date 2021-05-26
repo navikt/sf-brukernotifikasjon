@@ -119,7 +119,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
             log.info { "Setup sf-post connection for topic $topic" }
 
-            val kafkaConsumer = AKafkaConsumer<GenericRecord, GenericRecord>(
+            val kafkaConsumer = AKafkaConsumer<GenericRecord?, GenericRecord?>(
                     config = ws.kafkaConfig,
                     fromBeginning = true,
                     topics = listOf(topic)
@@ -133,6 +133,9 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
                 exitReason = ExitReason.NoEvents
                 if (cRecords.isEmpty) return@consume KafkaConsumerStates.IsFinished
+                if (cRecords.any { it.key() == null || it.value() == null }) {
+                    log.warn { "Found nulls in batch in $topic" }
+                }
 
                 if (!doneOnce) {
                     log.info { "Example record: key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
