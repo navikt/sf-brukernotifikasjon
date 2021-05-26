@@ -181,35 +181,35 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                 }
                 heartBeatConsumer = (heartBeatConsumer + 1) % 1000
 
-                if (!sentFirst) {
-                    sentFirst = true
+                // if (!sentFirst) {
+                //    sentFirst = true
 
-                    val body = SFsObjectRest(
-                            records = listOf(cRecords.first().let {
-                                KafkaMessage(
-                                        topic = topic,
-                                        key = it.key().toString().encodeB64(),
-                                        value = it.value().toString().encodeB64()
-                                )
-                            })
-                    ).toJson()
+                val body = SFsObjectRest(
+                        records = listOf(cRecords.first().let {
+                            KafkaMessage(
+                                    topic = topic,
+                                    key = it.key().toString().encodeB64(),
+                                    value = it.value().toString().encodeB64()
+                            )
+                        })
+                ).toJson()
 
-                    when (true/*postActivities(body).isSuccess()*/) {
-                        true -> {
-                            log.info { "DRY RUN Successful post on topic $topic" }
-                            workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
-                            // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
-                            KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
-                        }
-                        false -> {
-                            log.error { "Failed posting to SF" }
-                            workMetrics.producerIssues.inc()
-                            KafkaConsumerStates.HasIssues
-                        }
+                when (true/*postActivities(body).isSuccess()*/) {
+                    true -> {
+                        log.info { "DRY RUN Successful post on topic $topic" }
+                        workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
+                        // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
+                        KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
                     }
-                } else {
-                    KafkaConsumerStates.IsOk
+                    false -> {
+                        log.error { "Failed posting to SF" }
+                        workMetrics.producerIssues.inc()
+                        KafkaConsumerStates.HasIssues
+                    }
                 }
+                // } else {
+                KafkaConsumerStates.IsOk
+                // }
             }
             if (!resultOK) {
                 log.error { "Kafka consumer reports failure" }
