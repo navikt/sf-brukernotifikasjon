@@ -4,6 +4,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.prometheus.client.Gauge
 import mu.KotlinLogging
 import no.nav.sf.library.AKafkaConsumer
+import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.KafkaConsumerStates
 import no.nav.sf.library.KafkaMessage
 import no.nav.sf.library.POSTFIX_LATEST
@@ -24,11 +25,13 @@ sealed class ExitReason {
     object Work : ExitReason()
 }
 
+val kafkaSchemaReg = AnEnvironment.getEnvOrDefault("KAFKA_SCHEMA_REG","http://localhost:8081")
+
 data class WorkSettings(
     val kafkaConfig: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
-            "schema.registry.url" to "https://kafka-schema-registry.nais-q.adeo.no"
+            "schema.registry.url" to kafkaSchemaReg
     ) // ,
         // val sfClient: SalesforceClient = SalesforceClient()
 )
