@@ -91,7 +91,7 @@ var msg = "Msg without Key:\n"
 var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     if (runOnce) {
-        log.info { "Have run once already will wait" }
+        log.info { "Have run once already will wait.." }
         return Pair(ws, ExitReason.NoEvents)
     }
     runOnce = true
