@@ -12,6 +12,7 @@ import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
+import no.nav.sf.library.isSuccess
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -118,7 +119,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
     salesforceClient.enablesObjectPost { postActivities ->
 
-        listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
+        listOf(topicBeskjed).forEach { topic ->
 
             log.info { "Setup sf-post connection for topic $topic" }
 
@@ -194,9 +195,9 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                         })
                 ).toJson()
 
-                when (true/*postActivities(body).isSuccess()*/) {
+                when (postActivities(body).isSuccess()) {
                     true -> {
-                        log.info { "DRY RUN Successful post on topic $topic" }
+                        log.info { "Only beskjed Successful post on topic $topic" }
                         workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
                         // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
                         KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
