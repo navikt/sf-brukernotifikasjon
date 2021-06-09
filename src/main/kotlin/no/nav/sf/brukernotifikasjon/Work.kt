@@ -186,13 +186,13 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                 //    sentFirst = true
 
                 val body = SFsObjectRest(
-                        records = listOf(cRecords.first().let {
+                        records = cRecords.map {
                             KafkaMessage(
                                     topic = topic,
                                     key = it.key().toString().encodeB64(),
                                     value = it.value().toString().encodeB64()
                             )
-                        })
+                        }
                 ).toJson()
 
                 when (postActivities(body).isSuccess()) {
