@@ -119,7 +119,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
     salesforceClient.enablesObjectPost { postActivities ->
 
-        listOf(topicBeskjed).forEach { topic ->
+        listOf(topicOppgave).forEach { topic ->
 
             log.info { "Setup sf-post connection for topic $topic" }
 
