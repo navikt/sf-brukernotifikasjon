@@ -119,13 +119,13 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
     salesforceClient.enablesObjectPost { postActivities ->
 
-        listOf(topicOppgave).forEach { topic ->
+        listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
 
             log.info { "Setup sf-post connection for topic $topic" }
 
             val kafkaConsumer = AKafkaConsumer<GenericRecord?, GenericRecord?>(
                     config = ws.kafkaConfig,
-                    fromBeginning = true,
+                    fromBeginning = (topic == topicDone),
                     topics = listOf(topic)
             )
 
@@ -197,7 +197,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
                 when (postActivities(body).isSuccess()) {
                     true -> {
-                        log.info { "Only beskjed Successful post on topic $topic" }
+                        log.info { "(Latest beskjed oppgave. Load for Done) Successful post on topic $topic" }
                         workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
                         // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
                         KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
