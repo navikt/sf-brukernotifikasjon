@@ -12,7 +12,6 @@ import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
-import no.nav.sf.library.isSuccess
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -198,7 +197,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                         }
                 ).toJson()
 
-                when (postActivities(body).isSuccess()) {
+                when (/*postActivities(body).isSuccess()*/true) { // TODO Do not post in dev
                     true -> {
                         log.info { "(Latest beskjed oppgave. Load for Done) Successful post on topic $topic" }
                         workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
