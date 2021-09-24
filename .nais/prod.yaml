@@ -32,6 +32,8 @@ spec:
     requests:
       cpu: 100m
       memory: 512Mi
+  ingresses:
+    - "https://sf-brukernotifikasjon.intern.nav.no"
   vault:
     enabled: true
     paths:
