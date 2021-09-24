@@ -15,8 +15,10 @@ import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
 import org.http4k.core.Status
+import org.http4k.routing.ResourceLoader.Companion.Classpath
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import org.http4k.routing.static
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
@@ -95,6 +97,11 @@ private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
 
 fun naisAPI(): HttpHandler = routes(
+        "/static" bind static(Classpath("/static")),
+        "/swagger" bind Method.GET to {
+            val swaggerfile = Bootstrap.javaClass.classLoader.getResource("swagger.yml").readText()
+            Response(Status.OK).body(swaggerfile)
+        },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
             log.info { "Pretend authorized call to sf-brukernotifikasjon" }
