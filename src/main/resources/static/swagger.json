@@ -34,6 +34,16 @@
             "post": {
                 "tags": ["Done"],
                 "description": "Endepunkt for å sende Done til brukernotifikasjon",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Unik ID til notifikasjonen"
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "description": "Kafka parametrar",

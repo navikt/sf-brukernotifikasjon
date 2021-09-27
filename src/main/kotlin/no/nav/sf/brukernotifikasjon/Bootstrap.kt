@@ -160,7 +160,8 @@ fun naisAPI(): HttpHandler = routes(
             Response(Status.OK)
         },
         "/done" bind Method.POST to {
-            log.info { "done called with body ${it.bodyString()}" }
+
+            log.info { "done called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
 
             // val done = doneLens(it)
             /*
