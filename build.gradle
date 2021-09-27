@@ -13,6 +13,7 @@ buildscript {
     ext.kotest_version = '4.0.2'
     ext.kotlin_serialization = '0.14.0'
     ext.crm_utilities_version = '0.109'
+    ext.brukernotifikasjonerVersion = '1.2021.08.27-09.12-f8a8cbc76319'
 }
 
 plugins {
@@ -64,6 +65,12 @@ repositories {
     maven {
         url "http://packages.confluent.io/maven"
     }
+    maven {
+        url "https://packages.confluent.io/maven/"
+    }
+    maven {
+        url "https://jitpack.io"
+    }
 
     ["maven-release", "crm-utilities"].each { repo ->
         String token = System.getenv("GITHUB_TOKEN") ?: project.findProperty("githubPassword")
@@ -88,6 +95,8 @@ dependencies {
     compile "no.nav.sf.library:crm-utilities:$crm_utilities_version"
 
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.1"
+
+    implementation "com.github.navikt:brukernotifikasjon-schemas:$brukernotifikasjonerVersion"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutine"

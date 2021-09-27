@@ -7,14 +7,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.brukernotifikasjon.schemas.Done
+import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
 import no.nav.sf.library.ShutdownHook
+import org.http4k.core.Body
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
 import org.http4k.core.Status
+import org.http4k.format.Jackson.auto
 import org.http4k.routing.ResourceLoader.Companion.Classpath
 import org.http4k.routing.bind
 import org.http4k.routing.routes
@@ -96,11 +100,29 @@ internal val preStopHook: Gauge = Gauge
 private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
 
+val brukernotifikasjonService = BrukernotifikasjonService()
+
+val innboksLens = Body.auto<Innboks>().toLens()
+
+val doneLens = Body.auto<Done>().toLens()
+
 fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/swagger" bind Method.GET to {
             val swaggerfile = Bootstrap.javaClass.classLoader.getResource("swagger.yml").readText()
             Response(Status.OK).body(swaggerfile)
+        },
+        "/innboks" bind Method.GET to {
+            log.info { "innboks called with body ${it.body}" }
+            val innboks = innboksLens(it)
+            brukernotifikasjonService.sendInnboks()
+            Response(Status.OK).body(innboks.toString())
+        },
+        "/done" bind Method.GET to {
+            log.info { "done called with body ${it.body}" }
+            val done = doneLens(it)
+            brukernotifikasjonService.sendDone()
+            Response(Status.OK).body(done.toString())
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
