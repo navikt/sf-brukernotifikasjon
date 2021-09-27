@@ -59,17 +59,27 @@
                 "type": "object",
                 "properties": {
                     "hej": {
-                        "type" : "String",
-                        "description" : "A description"
+                        "type" : "string",
+                        "description" : "desc"
                     }
                 }
             },
             "DoneRequest": {
                 "type": "object",
                 "properties": {
-                    "hej": {
-                        "type" : "String",
-                        "description" : "A description"
+                    "tidspunkt": {
+                        "type": "string",
+                        "description": "Datetime string",
+                        "format": "date-time",
+                        "example": "2021-06-27T12:00:00.000Z"
+                    },
+                    "fodselsnummer": {
+                        "type" : "string",
+                        "description" : "fodselsnummer"
+                    },
+                    "grupperingsId": {
+                        "type" : "string",
+                        "description" : "grupperingsId"
                     }
                 }
             }

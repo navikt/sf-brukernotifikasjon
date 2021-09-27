@@ -107,18 +107,19 @@ val innboksLens = Body.auto<Innboks>().toLens()
 val doneLens = Body.auto<Done>().toLens()
 
 fun naisAPI(): HttpHandler = routes(
+        "/index.html" bind static(Classpath("/static/index.html")),
         "/static" bind static(Classpath("/static")),
         "/swagger" bind Method.GET to {
             val swaggerfile = Bootstrap.javaClass.classLoader.getResource("swagger.yml").readText()
             Response(Status.OK).body(swaggerfile)
         },
-        "/innboks" bind Method.GET to {
+        "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.body}" }
             val innboks = innboksLens(it)
             brukernotifikasjonService.sendInnboks()
             Response(Status.OK).body(innboks.toString())
         },
-        "/done" bind Method.GET to {
+        "/done" bind Method.POST to {
             log.info { "done called with body ${it.body}" }
             val done = doneLens(it)
             brukernotifikasjonService.sendDone()
