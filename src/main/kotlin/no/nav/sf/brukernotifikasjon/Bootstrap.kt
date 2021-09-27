@@ -16,7 +16,7 @@ import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -134,9 +134,15 @@ val gson = Gson()
  */
 data class DoneRequest(val tidspunkt: Date, val fodselsnummer: String, val grupperingsId: String)
 
-fun LocalDateTime?.toIsoString(): String {
+fun LocalDateTime?.toIsoDateTimeString(): String {
     return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
 }
+
+fun LocalDateTime?.toIsoInstantString(): String {
+    return this?.format(DateTimeFormatter.ISO_INSTANT) ?: ""
+}
+
+// ISO_INSTANT
 
 fun naisAPI(): HttpHandler = routes(
         "/index.html" bind static(Classpath("/static/index.html")),
@@ -156,9 +162,8 @@ fun naisAPI(): HttpHandler = routes(
             // val done = doneLens(it)
             val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
             brukernotifikasjonService.sendDone()
-            val ldt = done.tidspunkt.toInstant().atZone(ZoneId.systemDefault())
-                    .toLocalDateTime()
-            Response(Status.OK).body(done.toString() + " time ${ldt.toIsoString()}")
+            val ldt = LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC)
+            Response(Status.OK).body(done.toString() + " time instant ${ldt.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
