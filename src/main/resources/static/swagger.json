@@ -61,6 +61,38 @@
                     }
                 }
             }
+        },
+        "/innboks": {
+            "post": {
+                "tags": ["Innboks"],
+                "description": "Endepunkt for å sende Innboks til brukernotifikasjon",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Unik ID til notifikasjonen"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "description": "Kafka parametrar",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InnboksRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -77,6 +109,48 @@
             "DoneRequest": {
                 "type": "object",
                 "properties": {
+                    "tidspunkt": {
+                        "type": "string",
+                        "description": "Datetime string",
+                        "format": "date-time",
+                        "example": "2021-06-27T12:00:00.000Z"
+                    },
+                    "fodselsnummer": {
+                        "type" : "string",
+                        "description" : "fodselsnummer"
+                    },
+                    "grupperingsId": {
+                        "type" : "string",
+                        "description" : "grupperingsId"
+                    }
+                }
+            },
+            "InnboksRequest": {
+                "type": "object",
+                "properties": {
+                    "eksternVarsling": {
+                        "type": "boolean",
+                        "description": "eksternVarsling",
+                        "example": true
+                    },
+                    "link": {
+                        "type" : "string",
+                        "description" : "link"
+                    },
+                    "sikkerhetsnivaa": {
+                        "type" : "integer",
+                        "description" : "sikkerhetsnivaa",
+                        "example": 4
+                    },
+                    "tekst": {
+                        "type" : "string",
+                        "description" : "tekst"
+                    },
+                    "prefererteKanaler" : {
+                        "type" : "string",
+                        "description" : "csv med prefererteKanaler",
+                        "example" : "SMS,EPOST"
+                    },
                     "tidspunkt": {
                         "type": "string",
                         "description": "Datetime string",

@@ -154,25 +154,24 @@ fun naisAPI(): HttpHandler = routes(
             Response(Status.OK).body(swaggerfile)
         },
         "/innboks" bind Method.POST to {
-            log.info { "innboks called with body ${it.bodyString()}" }
-            // val innboks = innboksLens(it)
-            brukernotifikasjonService.sendInnboks()
-            Response(Status.OK)
+            log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
+            val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
+
+            val finalDone = DoneBuilder()
+                    .withFodselsnummer(done.fodselsnummer)
+                    .withGrupperingsId(done.grupperingsId)
+                    .withTidspunkt(LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC))
+                    .build()
+
+            brukernotifikasjonService.sendDone()
+            val ldt = LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC) // Removed zulu part.
+
+            val backToInstant = ldt.toInstant(ZoneOffset.UTC)
+            Response(Status.OK).body(done.toString() + " time instant ${done.tidspunkt.toInstant().toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalDone")
         },
         "/done" bind Method.POST to {
 
             log.info { "done called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-
-            // val done = doneLens(it)
-            /*
-             localDateTimeToUtcTimestamp(LocalDateTime dataAndTime, String fieldName, boolean required) {
-        if (dataAndTime != null) {
-            try {
-                return dataAndTime.toInstant(ZoneOffset.UTC).toEpochMilli();
-
-                LocalDateTime.now()
-             */
-
             val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
 
             val finalDone = DoneBuilder()
