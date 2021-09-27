@@ -1,10 +1,25 @@
 package no.nav.sf.brukernotifikasjon
 
 import com.google.gson.Gson
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
+import java.lang.reflect.Type
+import java.text.DateFormat
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -108,13 +123,19 @@ val innboksLens = Body.auto<Innboks>().toLens()
 
 val doneLens = Body.auto<Done>().toLens()
 
+// val gson: Gson = GsonBuilder().registerTypeAdapter(Date::class.java, GsonUTCDateAdapter()).create()
+
 val gson = Gson()
 /*
  tidspunkt": "2021-06-27T12:00:00.000Z",
   "fodselsnummer": "string",
   "grupperingsId": "string"
  */
-data class DoneRequest(val tidspunkt: Date, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(val tidspunkt: LocalDateTime, val fodselsnummer: String, val grupperingsId: String)
+
+fun LocalDateTime?.toIsoString(): String {
+    return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
+}
 
 fun naisAPI(): HttpHandler = routes(
         "/index.html" bind static(Classpath("/static/index.html")),
@@ -134,13 +155,13 @@ fun naisAPI(): HttpHandler = routes(
             // val done = doneLens(it)
             val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
             brukernotifikasjonService.sendDone()
-            Response(Status.OK).body(done.toString())
+            Response(Status.OK).body(done.toString() + " time ${done.tidspunkt.toIsoString()}")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
             log.info { "Pretend authorized call to sf-brukernotifikasjon" }
             log.info("body in ${it.body} - ${it.bodyString()}")
-                // call.respond(HttpStatusCode.Created, addArchive(requestBody))
+            // call.respond(HttpStatusCode.Created, addArchive(requestBody))
             // } else {
             //    log.info { "Arkiv call denied - missing valid token" }
             //    call.respond(HttpStatusCode.Unauthorized)
@@ -213,3 +234,26 @@ fun containsValidToken(request: ApplicationRequest): Boolean {
     return firstValidToken.isPresent
 }
 */
+
+// this class can't be static
+class GsonUTCDateAdapter : JsonSerializer<Date>, JsonDeserializer<Date> {
+    private val dateFormat: DateFormat
+    @Synchronized
+    override fun serialize(date: Date, type: Type, jsonSerializationContext: JsonSerializationContext): JsonElement {
+        return JsonPrimitive(dateFormat.format(date))
+    }
+
+    @Synchronized
+    override fun deserialize(jsonElement: JsonElement, type: Type, jsonDeserializationContext: JsonDeserializationContext): Date {
+        return try {
+            dateFormat.parse(jsonElement.getAsString())
+        } catch (e: ParseException) {
+            throw JsonParseException(e)
+        }
+    }
+
+    init {
+        dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.UK) // This is the format I need
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC") // This is the key line which converts the date to UTC which cannot be accessed with the default serializer
+    }
+}
