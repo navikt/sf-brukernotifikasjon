@@ -37,6 +37,7 @@
                 "parameters": [
                     {
                         "name": "eventId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -69,6 +70,7 @@
                 "parameters": [
                     {
                         "name": "eventId",
+                        "in": "query",
                         "required": true,
                         "schema": {
                             "type": "string"
