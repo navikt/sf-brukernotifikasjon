@@ -1,13 +1,15 @@
 package no.nav.sf.brukernotifikasjon
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
+import java.net.URL
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
+import no.nav.brukernotifikasjon.schemas.builders.InnboksBuilder
 import no.nav.brukernotifikasjon.schemas.builders.NokkelBuilder
+import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.sf.library.AKafkaProducer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 
@@ -34,11 +36,21 @@ fun createDone(): Done {
 }
 
 fun createInnboks(): Innboks {
-    return Innboks(
-            LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli(),
+    return InnboksBuilder()
+            .withEksternVarsling(false)
+            .withFodselsnummer("")
+            .withGrupperingsId("")
+            .withLink(URL(""))
+            .withSikkerhetsnivaa(4)
+            .withTekst("")
+            .withPrefererteKanaler(PreferertKanal.SMS, PreferertKanal.EPOST)
+            .withTidspunkt(LocalDateTime.now())
+            .build()
+
+    /*LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli(),
             "fodselsnummer",
             "grupperingsId",
             "tekst",
             "link",
-            4)
+            4)*/
 }
