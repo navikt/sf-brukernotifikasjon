@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
+import java.util.Date
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -108,6 +109,12 @@ val innboksLens = Body.auto<Innboks>().toLens()
 val doneLens = Body.auto<Done>().toLens()
 
 val gson = Gson()
+/*
+ tidspunkt": "2021-06-27T12:00:00.000Z",
+  "fodselsnummer": "string",
+  "grupperingsId": "string"
+ */
+data class DoneRequest(val tidspunkt: Date, val fodselsnummer: String, val grupperingsId: String)
 
 fun naisAPI(): HttpHandler = routes(
         "/index.html" bind static(Classpath("/static/index.html")),
@@ -125,7 +132,7 @@ fun naisAPI(): HttpHandler = routes(
         "/done" bind Method.POST to {
             log.info { "done called with body ${it.bodyString()}" }
             // val done = doneLens(it)
-            val done = gson.fromJson(it.bodyString(), Done::class.java)
+            val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
             brukernotifikasjonService.sendDone()
             Response(Status.OK).body(done.toString())
         },
