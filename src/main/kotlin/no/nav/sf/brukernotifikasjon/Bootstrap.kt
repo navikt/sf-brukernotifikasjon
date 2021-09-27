@@ -1,5 +1,6 @@
 package no.nav.sf.brukernotifikasjon
 
+import com.google.gson.Gson
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
@@ -106,6 +107,8 @@ val innboksLens = Body.auto<Innboks>().toLens()
 
 val doneLens = Body.auto<Done>().toLens()
 
+val gson = Gson()
+
 fun naisAPI(): HttpHandler = routes(
         "/index.html" bind static(Classpath("/static/index.html")),
         "/static" bind static(Classpath("/static")),
@@ -114,14 +117,15 @@ fun naisAPI(): HttpHandler = routes(
             Response(Status.OK).body(swaggerfile)
         },
         "/innboks" bind Method.POST to {
-            log.info { "innboks called with body ${it.body}" }
-            val innboks = innboksLens(it)
+            log.info { "innboks called with body ${it.bodyString()}" }
+            // val innboks = innboksLens(it)
             brukernotifikasjonService.sendInnboks()
-            Response(Status.OK).body(innboks.toString())
+            Response(Status.OK)
         },
         "/done" bind Method.POST to {
-            log.info { "done called with body ${it.body}" }
-            val done = doneLens(it)
+            log.info { "done called with body ${it.bodyString()}" }
+            // val done = doneLens(it)
+            val done = gson.fromJson(it.bodyString(), Done::class.java)
             brukernotifikasjonService.sendDone()
             Response(Status.OK).body(done.toString())
         },

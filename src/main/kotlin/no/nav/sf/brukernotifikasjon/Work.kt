@@ -93,6 +93,7 @@ var doneOnce = false
 var msg = "Msg without Key:\n"
 var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
+    return Pair(ws, ExitReason.NoEvents) // TODO Ignore in dev
     /*
     if (runOnce) {
         log.info { "Have run once already will wait.." }
