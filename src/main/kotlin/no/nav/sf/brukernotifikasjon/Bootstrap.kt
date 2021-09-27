@@ -191,7 +191,7 @@ fun naisAPI(): HttpHandler = routes(
             val ldt = LocalDateTime.ofInstant(Instant.parse(innboks.tidspunkt), ZoneOffset.UTC)
 
             val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body(innboks.toString() + " time instant ${Instant.parse(innboks.tidspunkt).toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalInnboks")
+            Response(Status.OK).body("$finalInnboks")
         },
         "/done" bind Method.POST to {
 
@@ -208,7 +208,7 @@ fun naisAPI(): HttpHandler = routes(
             val ldt = LocalDateTime.ofInstant(Instant.parse(done.tidspunkt), ZoneOffset.UTC)
 
             val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body(done.toString() + " time instant ${Instant.parse(done.tidspunkt).toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalDone")
+            Response(Status.OK).body("$finalDone")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
