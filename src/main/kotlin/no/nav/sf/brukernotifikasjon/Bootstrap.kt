@@ -15,6 +15,7 @@ import java.lang.reflect.Type
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -138,8 +139,8 @@ fun LocalDateTime?.toIsoDateTimeString(): String {
     return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
 }
 
-fun LocalDateTime?.toIsoInstantString(): String {
-    return this?.format(DateTimeFormatter.ISO_INSTANT) ?: ""
+fun Instant?.toIsoInstantString(): String {
+    return DateTimeFormatter.ISO_INSTANT.format(this) ?: ""
 }
 
 // ISO_INSTANT
@@ -163,7 +164,7 @@ fun naisAPI(): HttpHandler = routes(
             val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
             brukernotifikasjonService.sendDone()
             val ldt = LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC)
-            Response(Status.OK).body(done.toString() + " time instant ${ldt.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}")
+            Response(Status.OK).body(done.toString() + " time instant ${done.tidspunkt.toInstant().toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
