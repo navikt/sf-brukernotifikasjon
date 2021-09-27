@@ -16,6 +16,7 @@ import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -131,7 +132,7 @@ val gson = Gson()
   "fodselsnummer": "string",
   "grupperingsId": "string"
  */
-data class DoneRequest(val tidspunkt: LocalDateTime, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(val tidspunkt: Date, val fodselsnummer: String, val grupperingsId: String)
 
 fun LocalDateTime?.toIsoString(): String {
     return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
@@ -155,7 +156,9 @@ fun naisAPI(): HttpHandler = routes(
             // val done = doneLens(it)
             val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
             brukernotifikasjonService.sendDone()
-            Response(Status.OK).body(done.toString() + " time ${done.tidspunkt.toIsoString()}")
+            val ldt = done.tidspunkt.toInstant().atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+            Response(Status.OK).body(done.toString() + " time ${ldt.toIsoString()}")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {
