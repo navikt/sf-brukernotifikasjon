@@ -12,6 +12,7 @@ import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
 import java.lang.reflect.Type
+import java.net.URL
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -29,6 +30,8 @@ import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
+import no.nav.brukernotifikasjon.schemas.builders.InnboksBuilder
+import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
@@ -130,11 +133,29 @@ val doneLens = Body.auto<Done>().toLens()
 
 val gson = Gson()
 /*
- tidspunkt": "2021-06-27T12:00:00.000Z",
+{
+  "eksternVarsling": true,
+  "link": "string",
+  "sikkerhetsnivaa": 4,
+  "tekst": "string",
+  "prefererteKanaler": "SMS,EPOST",
+  "tidspunkt": "2021-06-27T12:00:00.000Z",
   "fodselsnummer": "string",
   "grupperingsId": "string"
+}
  */
-data class DoneRequest(val tidspunkt: Date, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
+
+data class InnboksRequest(
+    val eksternVarsling: Boolean,
+    val link: String,
+    val sikkerhetsnivaa: Int,
+    val tekst: String,
+    val prefererteKanaler: String,
+    val tidspunkt: String,
+    val fodselsnummer: String,
+    val grupperingsId: String
+)
 
 fun LocalDateTime?.toIsoDateTimeString(): String {
     return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
@@ -143,8 +164,6 @@ fun LocalDateTime?.toIsoDateTimeString(): String {
 fun Instant?.toIsoInstantString(): String {
     return DateTimeFormatter.ISO_INSTANT.format(this) ?: ""
 }
-
-// ISO_INSTANT
 
 fun naisAPI(): HttpHandler = routes(
         "/index.html" bind static(Classpath("/static/index.html")),
@@ -155,19 +174,24 @@ fun naisAPI(): HttpHandler = routes(
         },
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
+            val innboks = gson.fromJson(it.bodyString(), InnboksRequest::class.java)
 
-            val finalDone = DoneBuilder()
-                    .withFodselsnummer(done.fodselsnummer)
-                    .withGrupperingsId(done.grupperingsId)
-                    .withTidspunkt(LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC))
+            val finalInnboks = InnboksBuilder()
+                    .withEksternVarsling(innboks.eksternVarsling)
+                    .withLink(URL(innboks.link))
+                    .withSikkerhetsnivaa(innboks.sikkerhetsnivaa)
+                    .withTekst(innboks.tekst)
+                    .withPrefererteKanaler(*innboks.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
+                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboks.tidspunkt), ZoneOffset.UTC))
+                    .withFodselsnummer(innboks.fodselsnummer)
+                    .withGrupperingsId(innboks.grupperingsId)
                     .build()
 
-            brukernotifikasjonService.sendDone()
-            val ldt = LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC) // Removed zulu part.
+            brukernotifikasjonService.sendInnboks()
+            val ldt = LocalDateTime.ofInstant(Instant.parse(innboks.tidspunkt), ZoneOffset.UTC)
 
             val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body(done.toString() + " time instant ${done.tidspunkt.toInstant().toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalDone")
+            Response(Status.OK).body(innboks.toString() + " time instant ${Instant.parse(innboks.tidspunkt).toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalInnboks")
         },
         "/done" bind Method.POST to {
 
@@ -177,14 +201,14 @@ fun naisAPI(): HttpHandler = routes(
             val finalDone = DoneBuilder()
                     .withFodselsnummer(done.fodselsnummer)
                     .withGrupperingsId(done.grupperingsId)
-                    .withTidspunkt(LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC))
+                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(done.tidspunkt), ZoneOffset.UTC))
                     .build()
 
             brukernotifikasjonService.sendDone()
-            val ldt = LocalDateTime.ofInstant(done.tidspunkt.toInstant(), ZoneOffset.UTC) // Removed zulu part.
+            val ldt = LocalDateTime.ofInstant(Instant.parse(done.tidspunkt), ZoneOffset.UTC)
 
             val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body(done.toString() + " time instant ${done.tidspunkt.toInstant().toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalDone")
+            Response(Status.OK).body(done.toString() + " time instant ${Instant.parse(done.tidspunkt).toIsoInstantString()}, back to instant ${backToInstant.toIsoInstantString()}, time date time ${ldt.toIsoDateTimeString()}, finalDone $finalDone")
         },
         SEND bind Method.POST to {
             // if (containsValidToken(call.request)) {

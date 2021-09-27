@@ -8,28 +8,6 @@
         { "url": "https://sf-brukernotifikasjon.dev.intern.nav.no" }
     ],
     "paths": {
-        "/send": {
-            "post": {
-                "tags": ["Send"],
-                "description": "Endepunkt for post til brukernotifikasjon",
-                "requestBody": {
-                    "required": true,
-                    "description": "Kafka parametrar",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SendRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/done": {
             "post": {
                 "tags": ["Done"],
@@ -99,15 +77,6 @@
     },
     "components": {
         "schemas": {
-            "SendRequest": {
-                "type": "object",
-                "properties": {
-                    "hej": {
-                        "type" : "string",
-                        "description" : "desc"
-                    }
-                }
-            },
             "DoneRequest": {
                 "type": "object",
                 "properties": {
