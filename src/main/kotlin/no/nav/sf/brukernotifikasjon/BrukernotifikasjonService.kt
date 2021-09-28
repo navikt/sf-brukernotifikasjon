@@ -7,14 +7,14 @@ import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.NokkelBuilder
 import no.nav.sf.library.AKafkaProducer
-import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 
 class BrukernotifikasjonService {
     val kafkaProducerConfig: Map<String, Any> = AKafkaProducer.configBase + mapOf<String, Any>(
-            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             "schema.registry.url" to kafkaSchemaReg
     )
 
