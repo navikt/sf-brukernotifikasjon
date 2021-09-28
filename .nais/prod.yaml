@@ -41,6 +41,15 @@ spec:
         kvPath: /kv/prod/fss/sf-brukernotifikasjon/teamnks
       - mountPath: /var/run/secrets/nais.io/serviceuser
         kvPath: /serviceuser/data/prod/srvsfnksbrknot
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+        - application: salesforce
+          namespace: teamcrm
+          cluster: prod-external
   env:
     - name: KAFKA_BROKERS
       value: SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00148.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443,SASL_SSL://a01apvl00150.adeo.no:8443
@@ -60,6 +69,8 @@ spec:
       value: 'aapen-brukernotifikasjon-nyOppgave-v1'
     - name: KAFKA_TOPIC_DONE
       value: 'aapen-brukernotifikasjon-done-v1'
+    - name: KAFKA_TOPIC_INNBOKS
+      value: 'aapen-brukernotifikasjon-nyInnboks-v1'
     - name: MS_BETWEEN_WORK
       value: '240000'
     - name: SF_INSTANCE

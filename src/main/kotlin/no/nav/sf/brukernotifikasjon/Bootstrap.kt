@@ -1,34 +1,17 @@
 package no.nav.sf.brukernotifikasjon
 
 import com.google.gson.Gson
-import com.google.gson.JsonDeserializationContext
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
-import com.google.gson.JsonParseException
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
-import java.lang.reflect.Type
 import java.net.URL
-import java.text.DateFormat
-import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.brukernotifikasjon.schemas.Done
-import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
 import no.nav.brukernotifikasjon.schemas.builders.InnboksBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
@@ -36,12 +19,10 @@ import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
 import no.nav.sf.library.ShutdownHook
-import org.http4k.core.Body
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
 import org.http4k.core.Status
-import org.http4k.format.Jackson.auto
 import org.http4k.routing.ResourceLoader.Companion.Classpath
 import org.http4k.routing.bind
 import org.http4k.routing.routes
@@ -58,6 +39,10 @@ private val log = KotlinLogging.logger { }
 object Bootstrap {
 
     private val log = KotlinLogging.logger { }
+
+    val brukernotifikasjonService = BrukernotifikasjonService()
+
+    val gson = Gson()
 
     fun start(ws: WorkSettings = WorkSettings()) {
         log.info { "Starting" }
@@ -112,7 +97,6 @@ const val NAIS_ISALIVE = "/isAlive"
 const val NAIS_ISREADY = "/isReady"
 const val NAIS_METRICS = "/metrics"
 const val NAIS_PRESTOP = "/stop"
-const val SEND = "/send"
 
 internal val preStopHook: Gauge = Gauge
         .build()
@@ -123,27 +107,6 @@ internal val preStopHook: Gauge = Gauge
 private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
 
-val brukernotifikasjonService = BrukernotifikasjonService()
-
-val innboksLens = Body.auto<Innboks>().toLens()
-
-val doneLens = Body.auto<Done>().toLens()
-
-// val gson: Gson = GsonBuilder().registerTypeAdapter(Date::class.java, GsonUTCDateAdapter()).create()
-
-val gson = Gson()
-/*
-{
-  "eksternVarsling": true,
-  "link": "string",
-  "sikkerhetsnivaa": 4,
-  "tekst": "string",
-  "prefererteKanaler": "SMS,EPOST",
-  "tidspunkt": "2021-06-27T12:00:00.000Z",
-  "fodselsnummer": "string",
-  "grupperingsId": "string"
-}
- */
 data class DoneRequest(val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
 
 data class InnboksRequest(
@@ -157,6 +120,7 @@ data class InnboksRequest(
     val grupperingsId: String
 )
 
+/*
 fun LocalDateTime?.toIsoDateTimeString(): String {
     return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
 }
@@ -165,52 +129,44 @@ fun Instant?.toIsoInstantString(): String {
     return DateTimeFormatter.ISO_INSTANT.format(this) ?: ""
 }
 
+ */
+
 fun naisAPI(): HttpHandler = routes(
-        "/index.html" bind static(Classpath("/static/index.html")),
         "/static" bind static(Classpath("/static")),
-        "/swagger" bind Method.GET to {
-            val swaggerfile = Bootstrap.javaClass.classLoader.getResource("swagger.yml").readText()
-            Response(Status.OK).body(swaggerfile)
-        },
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            val innboks = gson.fromJson(it.bodyString(), InnboksRequest::class.java)
+            val eventId = it.queries("eventId").first()!!
+            val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
 
-            val finalInnboks = InnboksBuilder()
-                    .withEksternVarsling(innboks.eksternVarsling)
-                    .withLink(URL(innboks.link))
-                    .withSikkerhetsnivaa(innboks.sikkerhetsnivaa)
-                    .withTekst(innboks.tekst)
-                    .withPrefererteKanaler(*innboks.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboks.tidspunkt), ZoneOffset.UTC))
-                    .withFodselsnummer(innboks.fodselsnummer)
-                    .withGrupperingsId(innboks.grupperingsId)
+            val innboks = InnboksBuilder()
+                    .withEksternVarsling(innboksRequest.eksternVarsling)
+                    .withLink(URL(innboksRequest.link))
+                    .withSikkerhetsnivaa(innboksRequest.sikkerhetsnivaa)
+                    .withTekst(innboksRequest.tekst)
+                    .withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
+                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboksRequest.tidspunkt), ZoneOffset.UTC))
+                    .withFodselsnummer(innboksRequest.fodselsnummer)
+                    .withGrupperingsId(innboksRequest.grupperingsId)
                     .build()
 
-            brukernotifikasjonService.sendInnboks()
-            val ldt = LocalDateTime.ofInstant(Instant.parse(innboks.tidspunkt), ZoneOffset.UTC)
-
-            val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body("$finalInnboks")
+            Bootstrap.brukernotifikasjonService.sendInnboks(eventId, innboks)
+            Response(Status.OK).body("Published $innboks")
         },
         "/done" bind Method.POST to {
-
             log.info { "done called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            val done = gson.fromJson(it.bodyString(), DoneRequest::class.java)
+            val eventId = it.queries("eventId").first()!!
+            val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), DoneRequest::class.java)
 
-            val finalDone = DoneBuilder()
-                    .withFodselsnummer(done.fodselsnummer)
-                    .withGrupperingsId(done.grupperingsId)
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(done.tidspunkt), ZoneOffset.UTC))
+            val done = DoneBuilder()
+                    .withFodselsnummer(doneRequest.fodselsnummer)
+                    .withGrupperingsId(doneRequest.grupperingsId)
+                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(doneRequest.tidspunkt), ZoneOffset.UTC))
                     .build()
 
-            brukernotifikasjonService.sendDone()
-            val ldt = LocalDateTime.ofInstant(Instant.parse(done.tidspunkt), ZoneOffset.UTC)
-
-            val backToInstant = ldt.toInstant(ZoneOffset.UTC)
-            Response(Status.OK).body("$finalDone")
+            Bootstrap.brukernotifikasjonService.sendDone(eventId, done)
+            Response(Status.OK).body("Published $done")
         },
-        SEND bind Method.POST to {
+        "/send" bind Method.POST to {
             // if (containsValidToken(call.request)) {
             log.info { "Pretend authorized call to sf-brukernotifikasjon" }
             log.info("body in ${it.body} - ${it.bodyString()}")
@@ -287,26 +243,3 @@ fun containsValidToken(request: ApplicationRequest): Boolean {
     return firstValidToken.isPresent
 }
 */
-
-// this class can't be static
-class GsonUTCDateAdapter : JsonSerializer<Date>, JsonDeserializer<Date> {
-    private val dateFormat: DateFormat
-    @Synchronized
-    override fun serialize(date: Date, type: Type, jsonSerializationContext: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(dateFormat.format(date))
-    }
-
-    @Synchronized
-    override fun deserialize(jsonElement: JsonElement, type: Type, jsonDeserializationContext: JsonDeserializationContext): Date {
-        return try {
-            dateFormat.parse(jsonElement.getAsString())
-        } catch (e: ParseException) {
-            throw JsonParseException(e)
-        }
-    }
-
-    init {
-        dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.UK) // This is the format I need
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC") // This is the key line which converts the date to UTC which cannot be accessed with the default serializer
-    }
-}
