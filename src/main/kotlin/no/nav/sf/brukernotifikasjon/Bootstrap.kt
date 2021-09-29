@@ -15,6 +15,7 @@ import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
 import no.nav.brukernotifikasjon.schemas.builders.InnboksBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
+import no.nav.sf.brukernotifikasjon.token.containsValidToken
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
@@ -120,63 +121,48 @@ data class InnboksRequest(
     val grupperingsId: String
 )
 
-/*
-fun LocalDateTime?.toIsoDateTimeString(): String {
-    return this?.format(DateTimeFormatter.ISO_DATE_TIME) ?: ""
-}
-
-fun Instant?.toIsoInstantString(): String {
-    return DateTimeFormatter.ISO_INSTANT.format(this) ?: ""
-}
-
- */
-
 fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            val eventId = it.queries("eventId").first()!!
-            val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
-
-            val innboks = InnboksBuilder()
-                    .withEksternVarsling(innboksRequest.eksternVarsling)
-                    .withLink(URL(innboksRequest.link))
-                    .withSikkerhetsnivaa(innboksRequest.sikkerhetsnivaa)
-                    .withTekst(innboksRequest.tekst)
-                    .withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboksRequest.tidspunkt), ZoneOffset.UTC))
-                    .withFodselsnummer(innboksRequest.fodselsnummer)
-                    .withGrupperingsId(innboksRequest.grupperingsId)
-                    .build()
-
-            Bootstrap.brukernotifikasjonService.sendInnboks(eventId, innboks)
-            Response(Status.OK).body("Published $innboks")
+            if (containsValidToken(it)) {
+                val eventId = it.queries("eventId").first()!!
+                val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
+                val innboks = InnboksBuilder()
+                        .withEksternVarsling(innboksRequest.eksternVarsling)
+                        .withLink(URL(innboksRequest.link))
+                        .withSikkerhetsnivaa(innboksRequest.sikkerhetsnivaa)
+                        .withTekst(innboksRequest.tekst)
+                        .withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboksRequest.tidspunkt), ZoneOffset.UTC))
+                        .withFodselsnummer(innboksRequest.fodselsnummer)
+                        .withGrupperingsId(innboksRequest.grupperingsId)
+                        .build()
+                Bootstrap.brukernotifikasjonService.sendInnboks(eventId, innboks)
+                Response(Status.OK).body("Published $innboks")
+            } else {
+                log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
+                Response(Status.UNAUTHORIZED)
+            }
         },
         "/done" bind Method.POST to {
             log.info { "done called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            val eventId = it.queries("eventId").first()!!
-            val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), DoneRequest::class.java)
+            if (containsValidToken(it)) {
+                val eventId = it.queries("eventId").first()!!
+                val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), DoneRequest::class.java)
 
-            val done = DoneBuilder()
-                    .withFodselsnummer(doneRequest.fodselsnummer)
-                    .withGrupperingsId(doneRequest.grupperingsId)
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(doneRequest.tidspunkt), ZoneOffset.UTC))
-                    .build()
+                val done = DoneBuilder()
+                        .withFodselsnummer(doneRequest.fodselsnummer)
+                        .withGrupperingsId(doneRequest.grupperingsId)
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(doneRequest.tidspunkt), ZoneOffset.UTC))
+                        .build()
 
-            Bootstrap.brukernotifikasjonService.sendDone(eventId, done)
-            Response(Status.OK).body("Published $done")
-        },
-        "/send" bind Method.POST to {
-            // if (containsValidToken(call.request)) {
-            log.info { "Pretend authorized call to sf-brukernotifikasjon" }
-            log.info("body in ${it.body} - ${it.bodyString()}")
-            // call.respond(HttpStatusCode.Created, addArchive(requestBody))
-            // } else {
-            //    log.info { "Arkiv call denied - missing valid token" }
-            //    call.respond(HttpStatusCode.Unauthorized)
-            // }
-            var response = Response(Status.OK).body("body body")
-            response
+                Bootstrap.brukernotifikasjonService.sendDone(eventId, done)
+                Response(Status.OK).body("Published $done")
+            } else {
+                log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
+                Response(Status.UNAUTHORIZED)
+            }
         },
         NAIS_ISALIVE bind Method.GET to { Response(Status.OK) },
         NAIS_ISREADY bind Method.GET to { Response(Status.OK) },
@@ -222,24 +208,3 @@ fun enableNAISAPIModified(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit
                 log.info { "NAIS DSL is stopped at port $port" }
             }
         }
-
-const val env_AZURE_APP_WELL_KNOWN_URL = "AZURE_APP_WELL_KNOWN_URL"
-const val env_AZURE_APP_CLIENT_ID = "AZURE_APP_CLIENT_ID"
-const val claim_NAME = "name"
-/*
-val multiIssuerConfiguration = MultiIssuerConfiguration(
-        mapOf(
-                "azure" to IssuerProperties(
-                        URL(Environment.getEnvOrDefault(env_AZURE_APP_WELL_KNOWN_URL, "http://")),
-                        listOf(Environment.getEnvOrDefault(env_AZURE_APP_CLIENT_ID, ""))
-                )
-        )
-)
-
-private val jwtTokenValidationHandler = JwtTokenValidationHandler(multiIssuerConfiguration)
-
-fun containsValidToken(request: ApplicationRequest): Boolean {
-    val firstValidToken = jwtTokenValidationHandler.getValidatedTokens(fromApplicationRequest(request)).firstValidToken
-    return firstValidToken.isPresent
-}
-*/
