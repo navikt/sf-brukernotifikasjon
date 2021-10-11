@@ -108,11 +108,12 @@
                     "eksternVarsling": {
                         "type": "boolean",
                         "description": "eksternVarsling",
-                        "example": true
+                        "example": false
                     },
                     "link": {
                         "type" : "string",
-                        "description" : "link"
+                        "description" : "link",
+                        "example": ""
                     },
                     "sikkerhetsnivaa": {
                         "type" : "integer",
@@ -121,7 +122,8 @@
                     },
                     "tekst": {
                         "type" : "string",
-                        "description" : "tekst"
+                        "description" : "tekst",
+                        "example": "tekst"
                     },
                     "prefererteKanaler" : {
                         "type" : "string",
@@ -136,11 +138,13 @@
                     },
                     "fodselsnummer": {
                         "type" : "string",
-                        "description" : "fodselsnummer"
+                        "description" : "fodselsnummer",
+                        "example" : "27098312345"
                     },
                     "grupperingsId": {
                         "type" : "string",
-                        "description" : "grupperingsId"
+                        "description" : "grupperingsId",
+                        "example" : "grupperingsId"
                     }
                 }
             }
