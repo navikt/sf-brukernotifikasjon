@@ -111,11 +111,11 @@ private fun String.responseByContent(): Response =
 data class DoneRequest(val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
 
 data class InnboksRequest(
-    val eksternVarsling: Boolean,
-    val link: String,
-    val sikkerhetsnivaa: Int,
+    val eksternVarsling: Boolean = false,
+    val link: String = "",
+    val sikkerhetsnivaa: Int = 4,
     val tekst: String,
-    val prefererteKanaler: String,
+    val prefererteKanaler: String = "",
     val tidspunkt: String,
     val fodselsnummer: String,
     val grupperingsId: String
@@ -128,16 +128,21 @@ fun naisAPI(): HttpHandler = routes(
             if (containsValidToken(it)) {
                 val eventId = it.queries("eventId").first()!!
                 val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
-                val innboks = InnboksBuilder()
+                val innboksbuilder = InnboksBuilder()
                         .withEksternVarsling(innboksRequest.eksternVarsling)
-                        .withLink(URL(innboksRequest.link))
                         .withSikkerhetsnivaa(innboksRequest.sikkerhetsnivaa)
                         .withTekst(innboksRequest.tekst)
-                        .withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
                         .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboksRequest.tidspunkt), ZoneOffset.UTC))
                         .withFodselsnummer(innboksRequest.fodselsnummer)
                         .withGrupperingsId(innboksRequest.grupperingsId)
-                        .build()
+
+                if (innboksRequest.link.isNotEmpty()) {
+                    innboksbuilder.withLink(URL(innboksRequest.link))
+                }
+                if (innboksRequest.prefererteKanaler.isNotEmpty()) {
+                    innboksbuilder.withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
+                }
+                val innboks = innboksbuilder.build()
                 Bootstrap.brukernotifikasjonService.sendInnboks(eventId, innboks)
                 Response(Status.OK).body("Published $innboks")
             } else {
