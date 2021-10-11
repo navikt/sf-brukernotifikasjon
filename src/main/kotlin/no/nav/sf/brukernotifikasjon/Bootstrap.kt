@@ -125,7 +125,7 @@ fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            if (containsValidToken(it)) {
+            if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
                 val eventId = it.queries("eventId").first()!!
                 val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
                 val innboksbuilder = InnboksBuilder()
