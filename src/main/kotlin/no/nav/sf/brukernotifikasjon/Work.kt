@@ -5,13 +5,16 @@ import io.prometheus.client.Gauge
 import mu.KotlinLogging
 import no.nav.sf.library.AKafkaConsumer
 import no.nav.sf.library.AnEnvironment
+import no.nav.sf.library.EV_kafkaClientID
 import no.nav.sf.library.KafkaConsumerStates
 import no.nav.sf.library.KafkaMessage
 import no.nav.sf.library.POSTFIX_LATEST
+import no.nav.sf.library.PROGNAME
 import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
+import no.nav.sf.library.isSuccess
 import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -32,7 +35,14 @@ data class WorkSettings(
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             "schema.registry.url" to kafkaSchemaReg
-    ) // ,
+    ),
+    val kafkaConfigAlt: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
+        ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
+        ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
+        ConsumerConfig.GROUP_ID_CONFIG to AnEnvironment.getEnvOrDefault(EV_kafkaClientID, PROGNAME) + "_init",
+        ConsumerConfig.CLIENT_ID_CONFIG to AnEnvironment.getEnvOrDefault(EV_kafkaClientID, PROGNAME) + "_init",
+        "schema.registry.url" to kafkaSchemaReg
+    )
         // val sfClient: SalesforceClient = SalesforceClient()
 )
 
@@ -93,7 +103,7 @@ var doneOnce = false
 var msg = "Msg without Key: \n"
 var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
-    // return Pair(ws, ExitReason.NoEvents) // TODO Ignore in dev
+    return Pair(ws, ExitReason.NoEvents) // Ignore for now
     /*
     if (runOnce) {
         log.info { "Have run once already will wait.." }
@@ -198,7 +208,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                         }
                 ).toJson()
 
-                when (/*postActivities(body).isSuccess()*/true) { // TODO Do not post in dev
+                when (postActivities(body).isSuccess()) {
                     true -> {
                         log.info { "(Latest beskjed oppgave. Load for Done) Successful post on topic $topic" }
                         workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
