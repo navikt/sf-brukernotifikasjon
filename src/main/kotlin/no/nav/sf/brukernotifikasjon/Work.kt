@@ -8,14 +8,12 @@ import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.EV_kafkaClientID
 import no.nav.sf.library.KafkaConsumerStates
 import no.nav.sf.library.KafkaMessage
-import no.nav.sf.library.POSTFIX_LATEST
 import no.nav.sf.library.PROGNAME
 import no.nav.sf.library.SFsObjectRest
 import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
 import no.nav.sf.library.isSuccess
-import no.nav.sf.library.kafkaConsumerOffsetRangeBoard
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 
@@ -103,15 +101,13 @@ var doneOnce = false
 var msg = "Msg without Key: \n"
 var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
-    return Pair(ws, ExitReason.NoEvents) // Ignore for now
-    /*
+    // return Pair(ws, ExitReason.NoEvents) // Ignore for now
+
     if (runOnce) {
         log.info { "Have run once already will wait.." }
         return Pair(ws, ExitReason.NoEvents)
     }
     runOnce = true
-
-     */
 
     var heartBeatConsumer = 0
 
@@ -130,6 +126,16 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     var cntNullValue = 0
     var cntBigMessage = 0
 
+    /*
+    Investigate Found By Key Beskjed ref on post 556689
+    Investigate Found By Key Oppgave ref on post 2795862
+    Investigate Found By Key Done ref on post 2838569
+     */
+
+    val latestPostedBeskjedOffset = 556689L
+    val latestPostedOppgaveOffset = 2795862L
+    val latestPostedDoneOffset = 2838569L
+
     salesforceClient.enablesObjectPost { postActivities ->
 
         listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
@@ -138,7 +144,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
             val kafkaConsumer = AKafkaConsumer<GenericRecord?, GenericRecord?>(
                     config = ws.kafkaConfig,
-                    fromBeginning = false,
+                    fromBeginning = true,
                     topics = listOf(topic)
             )
 
@@ -184,14 +190,24 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                 cRecords.filter { it.value() == null }.forEach {
                     cntNullValue++
                 }
+
+                val chosen = when (topic) {
+                    topicOppgave -> cRecords.filter { it.offset() > latestPostedOppgaveOffset }
+                    topicBeskjed -> cRecords.filter { it.offset() > latestPostedBeskjedOffset }
+                    topicDone -> cRecords.filter { it.offset() > latestPostedDoneOffset }
+                    else -> cRecords
+                }
+
+                if (chosen.count() == 0) return@consume KafkaConsumerStates.IsOk
+
                 when (topic) {
-                    topicOppgave -> cntOppgave += cRecords.count()
-                    topicBeskjed -> cntBeskjed += cRecords.count()
-                    topicDone -> cntDone += cRecords.count()
+                    topicOppgave -> cntOppgave += chosen.count()
+                    topicBeskjed -> cntBeskjed += chosen.count()
+                    topicDone -> cntDone += chosen.count()
                 }
 
                 if (heartBeatConsumer == 0) {
-                    log.info { "Heartbeat consumer $topic - latest successful offset current run: ${kafkaConsumerOffsetRangeBoard[currentConsumerMessageHost + POSTFIX_LATEST]?.second ?: "Unknown"}" }
+                    // log.info { "Heartbeat consumer $topic - latest successful offset current run: ${kafkaConsumerOffsetRangeBoard[currentConsumerMessageHost + POSTFIX_LATEST]?.second ?: "Unknown"}" }
                 }
                 heartBeatConsumer = (heartBeatConsumer + 1) % 1000
 
@@ -199,7 +215,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                 //    sentFirst = true
 
                 val body = SFsObjectRest(
-                        records = cRecords.map {
+                        records = chosen.map {
                             KafkaMessage(
                                     topic = topic,
                                     key = it.key().toString().encodeB64(),
@@ -210,8 +226,8 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
                 when (postActivities(body).isSuccess()) {
                     true -> {
-                        log.info { "(Latest beskjed oppgave. Load for Done) Successful post on topic $topic" }
-                        workMetrics.noOfPostedEvents.inc(cRecords.count().toDouble())
+                        log.info { "Successful post on topic $topic - latest offset ${chosen.last().offset()}" }
+                        workMetrics.noOfPostedEvents.inc(chosen.count().toDouble())
                         // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
                         KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
                     }
