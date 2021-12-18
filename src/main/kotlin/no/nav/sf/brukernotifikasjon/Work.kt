@@ -130,11 +130,15 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     Investigate Found By Key Beskjed ref on post 556689
     Investigate Found By Key Oppgave ref on post 2795862
     Investigate Found By Key Done ref on post 2838569
+
+aapen-brukernotifikasjon-nyOppgave-v1-LATEST=(3415470, 3417652),
+aapen-brukernotifikasjon-nyBeskjed-v1-LATEST=(639594, 639594),
+aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
      */
 
-    val latestPostedBeskjedOffset = 556689L
-    val latestPostedOppgaveOffset = 2795862L
-    val latestPostedDoneOffset = 2838569L
+    val latestPostedBeskjedOffset = 639594L
+    val latestPostedOppgaveOffset = 3417652L
+    val latestPostedDoneOffset = 3524698L
 
     salesforceClient.enablesObjectPost { postActivities ->
 
@@ -144,7 +148,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
             val kafkaConsumer = AKafkaConsumer<GenericRecord?, GenericRecord?>(
                     config = ws.kafkaConfig,
-                    fromBeginning = true,
+                    fromBeginning = false,
                     topics = listOf(topic)
             )
 
@@ -198,7 +202,10 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
                     else -> cRecords
                 }
 
-                if (chosen.count() == 0) return@consume KafkaConsumerStates.IsOk
+                if (chosen.count() == 0) {
+                    log.error { "Kafka lost offset? Found no records after offset limit - will abort" }
+                    return@consume KafkaConsumerStates.HasIssues
+                }
 
                 when (topic) {
                     topicOppgave -> cntOppgave += chosen.count()
