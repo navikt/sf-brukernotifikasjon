@@ -103,11 +103,13 @@ var msg2 = "\nMsg with Key:\n"
 internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     // return Pair(ws, ExitReason.NoEvents) // Ignore for now
 
+    /*
     if (runOnce) {
         log.info { "Have run once already will wait.." }
         return Pair(ws, ExitReason.NoEvents)
     }
     runOnce = true
+     */
 
     var heartBeatConsumer = 0
 
