@@ -45,7 +45,12 @@ class KafkaProducerWrapper<K, V>(
 
     fun sendEvent(key: K, event: V) {
         ProducerRecord(topicName, key, event).let { producerRecord ->
-            kafkaProducer.send(producerRecord)
+            try {
+                kafkaProducer.send(producerRecord)
+            } catch (e: Exception) {
+                workMetrics.apiIssues.inc()
+                throw e
+            }
         }
     }
 
@@ -55,6 +60,7 @@ class KafkaProducerWrapper<K, V>(
             kafkaProducer.close()
             log.info("Produsent for kafka-eventer er flushet og lukket.")
         } catch (e: Exception) {
+            workMetrics.apiIssues.inc()
             log.warn("Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert.")
         }
     }

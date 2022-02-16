@@ -12,7 +12,7 @@ buildscript {
     ext.prometheus_version = '0.8.0'
     ext.kotest_version = '4.0.2'
     ext.kotlin_serialization = '0.14.0'
-    ext.crm_utilities_version = '0.109'
+    ext.crm_utilities_version = '0.115'
     //ext.brukernotifikasjonerVersion = '1.2021.08.27-09.12-f8a8cbc76319'
     ext.brukernotifikasjonerVersion = 'v1.1.0'
 }

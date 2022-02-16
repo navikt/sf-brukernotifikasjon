@@ -13,7 +13,7 @@ fun investigate(ws: WorkSettings) {
     var heartBeatConsumer = 0
 
     log.info { "Investigate - session starting" }
-    workMetrics.clearAll()
+    workMetrics.clearAllKafkaRelated()
 
     var exitReason: ExitReason = ExitReason.NoSFClient
 

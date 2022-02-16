@@ -14,6 +14,7 @@ import no.nav.sf.library.SalesforceClient
 import no.nav.sf.library.currentConsumerMessageHost
 import no.nav.sf.library.encodeB64
 import no.nav.sf.library.isSuccess
+import no.nav.sf.library.kErrorState
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 
@@ -75,9 +76,24 @@ data class WMetrics(
             .build()
             .name("consumer_issues")
             .help("consumer issues")
-            .register()
+            .register(),
+    val requestsDone: Gauge = Gauge
+        .build()
+        .name("request_done")
+        .help("request_done")
+        .register(),
+    val requestsInnboks: Gauge = Gauge
+        .build()
+        .name("request_innboks")
+        .help("request_innboks")
+        .register(),
+    val apiIssues: Gauge = Gauge
+        .build()
+        .name("api_issues")
+        .help("api_issues")
+        .register()
 ) {
-    fun clearAll() {
+    fun clearAllKafkaRelated() {
         noOfConsumedEvents.clear()
         noOfPostedEvents.clear()
         producerIssues.clear()
@@ -114,7 +130,7 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
     var heartBeatConsumer = 0
 
     log.info { "bootstrap work session starting" }
-    workMetrics.clearAll()
+    workMetrics.clearAllKafkaRelated()
 
     var exitReason: ExitReason = ExitReason.NoSFClient
 
@@ -247,12 +263,14 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
                     }
                 }
                 // } else {
-                KafkaConsumerStates.IsOk
+                // KafkaConsumerStates.IsOk
                 // }
             }
             if (!resultOK) {
-                log.error { "Kafka consumer reports failure" }
-                workMetrics.consumerIssues.inc()
+                log.error { "Kafka consumer reports failure, kErrorState: $kErrorState" }
+                // if (kErrorState == ErrorState.UNKNOWN_ERROR) {
+                    workMetrics.consumerIssues.inc()
+                // }
             }
         }
     }
