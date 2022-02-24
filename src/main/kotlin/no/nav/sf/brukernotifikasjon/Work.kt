@@ -183,7 +183,7 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
                 }
 
                 if (!doneOnce) {
-                    log.info { "Example record: key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
+                    log.info { "Example record:  key: ${cRecords.first().key()} value: ${cRecords.first().value()}" }
                 }
                 doneOnce = true
 
