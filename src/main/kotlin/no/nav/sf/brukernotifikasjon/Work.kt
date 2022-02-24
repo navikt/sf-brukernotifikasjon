@@ -42,7 +42,7 @@ data class WorkSettings(
         ConsumerConfig.CLIENT_ID_CONFIG to AnEnvironment.getEnvOrDefault(EV_kafkaClientID, PROGNAME) + "_init",
         "schema.registry.url" to kafkaSchemaReg
     )
-        // val sfClient: SalesforceClient = SalesforceClient()
+    // val sfClient: SalesforceClient = SalesforceClient()
 )
 
 // some work metrics
@@ -160,7 +160,7 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
 
     salesforceClient.enablesObjectPost { postActivities ->
 
-        listOf(topicBeskjed, topicOppgave, topicDone).forEach { topic ->
+        listOf(topicBeskjed, topicOppgave).forEach { topic ->
 
             log.info { "Setup sf-post connection for topic $topic" }
 
