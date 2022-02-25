@@ -156,7 +156,7 @@ fun naisAPI(): HttpHandler = routes(
         },
         "/done" bind Method.POST to {
             workMetrics.requestsDone.inc()
-            log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
+            // log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
             if (containsValidToken(it)) {
                 val eventId = it.queries("eventId").first()!!
                 val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), DoneRequest::class.java)
