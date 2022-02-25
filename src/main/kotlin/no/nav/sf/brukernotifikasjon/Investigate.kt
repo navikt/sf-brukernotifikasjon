@@ -21,7 +21,6 @@ fun investigate(ws: WorkSettings) {
 
     var cntBeskjed = 0
     var cntOppgave = 0
-    var cntDone = 0
 
     var cntNullKey = 0
     var cntNullValue = 0
@@ -112,7 +111,6 @@ fun investigate(ws: WorkSettings) {
                     }
                 }
                 topicDone -> {
-                    cntDone += cRecords.count()
                     cRecords.filter { it.value().toString().encodeB64().equals(refDone) }.forEach {
                         log.info { "Investigate Found By Val Done ref on post ${it.offset()}" }
                         latestFoundPosition[topicDone] = it.offset()
@@ -174,6 +172,6 @@ fun investigate(ws: WorkSettings) {
     } // end of per topic clause
     // File("/tmp/investigate").writeText(msg + msg2)
     log.info {
-        "Investigate session finished - report by val: $latestFoundPosition, by key: $latestFoundPositionByKey - nullKey: $cntNullKey, nullValue: $cntNullValue, cntBigMessage: $cntBigMessage, cnt total: ${cntBeskjed + cntOppgave + cntDone}, beskjed: $cntBeskjed, oppgave: $cntOppgave, done: $cntDone "
+        "Investigate session finished - report by val: $latestFoundPosition, by key: $latestFoundPositionByKey - nullKey: $cntNullKey, nullValue: $cntNullValue, cntBigMessage: $cntBigMessage, cnt total: ${cntBeskjed + cntOppgave}, beskjed: $cntBeskjed, oppgave: $cntOppgave "
     }
 }

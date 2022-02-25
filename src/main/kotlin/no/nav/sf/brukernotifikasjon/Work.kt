@@ -57,16 +57,16 @@ data class WMetrics(
             .name("sf_posted_event_gauge")
             .help("No. of posted events to Salesforce since last work session")
             .register(),
-    val noOfConsumedEventsOpprettet: Gauge = Gauge
-            .build()
-            .name("kafka_consumed_event_gauge_opprettet")
-            .help("No. of consumed activity events from kafka since last work session")
-            .register(),
-    val noOfPostedEventsOpprettet: Gauge = Gauge
-            .build()
-            .name("sf_posted_event_gauge_opprettet")
-            .help("No. of posted events to Salesforce since last work session")
-            .register(),
+    val noOfPostedEventsOppgave: Gauge = Gauge
+        .build()
+        .name("sf_posted_event_gauge_oppgave")
+        .help("No. of posted oppgave events to Salesforce since last work session")
+        .register(),
+    val noOfPostedEventsBeskjed: Gauge = Gauge
+        .build()
+        .name("sf_posted_event_gauge_beskjed")
+        .help("No. of posted beskjed events to Salesforce since last work session")
+        .register(),
     val producerIssues: Gauge = Gauge
             .build()
             .name("producer_issues")
@@ -96,6 +96,8 @@ data class WMetrics(
     fun clearAllKafkaRelated() {
         noOfConsumedEvents.clear()
         noOfPostedEvents.clear()
+        noOfPostedEventsOppgave.clear()
+        noOfPostedEventsBeskjed.clear()
         producerIssues.clear()
         consumerIssues.clear()
     }
@@ -138,7 +140,6 @@ internal fun work(ws: WorkSettings): Pair<WorkSettings, ExitReason> {
 
     var cntBeskjed = 0
     var cntOppgave = 0
-    var cntDone = 0
 
     var cntNullKey = 0
     var cntNullValue = 0
@@ -216,7 +217,6 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
                 val chosen = when (topic) {
                     topicOppgave -> cRecords.filter { it.offset() > latestPostedOppgaveOffset }
                     topicBeskjed -> cRecords.filter { it.offset() > latestPostedBeskjedOffset }
-                    topicDone -> cRecords.filter { it.offset() > latestPostedDoneOffset }
                     else -> cRecords
                 }
 
@@ -228,7 +228,6 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
                 when (topic) {
                     topicOppgave -> cntOppgave += chosen.count()
                     topicBeskjed -> cntBeskjed += chosen.count()
-                    topicDone -> cntDone += chosen.count()
                 }
 
                 if (heartBeatConsumer == 0) {
@@ -253,7 +252,10 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
                     true -> {
                         log.info { "Successful post on topic $topic - latest offset ${chosen.last().offset()}" }
                         workMetrics.noOfPostedEvents.inc(chosen.count().toDouble())
-                        // if (topic == topicOpprettet) workMetrics.noOfPostedEventsOpprettet.inc(cRecords.count().toDouble())
+                        when (topic) {
+                            topicOppgave -> workMetrics.noOfPostedEventsOppgave.inc(chosen.count().toDouble())
+                            topicBeskjed -> workMetrics.noOfPostedEventsBeskjed.inc(chosen.count().toDouble())
+                        }
                         KafkaConsumerStates.IsOk // IsFinished // IsOk normally but now want to finished after first successful post
                     }
                     false -> {
@@ -275,7 +277,7 @@ aapen-brukernotifikasjon-done-v1-LATEST=(3524698, 3524698)
         }
     }
     // File("/tmp/investigate").writeText(msg + msg2)
-    log.info { "Work session finished - nullKey: $cntNullKey, nullValue: $cntNullValue, cntBigMessage: $cntBigMessage, cnt total: ${cntBeskjed + cntOppgave + cntDone}, beskjed: $cntBeskjed, oppgave: $cntOppgave, done: $cntDone - published ${workMetrics.noOfPostedEvents.get().toInt()} events" }
+    log.info { "Work session finished - nullKey: $cntNullKey, nullValue: $cntNullValue, cntBigMessage: $cntBigMessage, cnt total: ${cntBeskjed + cntOppgave}, beskjed: $cntBeskjed, oppgave: $cntOppgave - published ${workMetrics.noOfPostedEvents.get().toInt()} events" }
 
     return Pair(ws, exitReason)
 }
