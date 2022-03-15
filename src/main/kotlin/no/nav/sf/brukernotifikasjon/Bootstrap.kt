@@ -73,12 +73,12 @@ object Bootstrap {
     private fun conditionalWait(ms: Long = bootstrapWaitTime) =
             runBlocking {
 
-                log.info { "Will wait $ms ms before starting all over" }
+                log.debug { "Will wait $ms ms before starting all over" }
 
                 val cr = launch {
                     runCatching { delay(ms) }
-                            .onSuccess { log.info { "waiting completed" } }
-                            .onFailure { log.info { "waiting interrupted" } }
+                            .onSuccess { log.debug { "waiting completed" } }
+                            .onFailure { log.debug { "waiting interrupted" } }
                 }
 
                 tailrec suspend fun loop(): Unit = when {

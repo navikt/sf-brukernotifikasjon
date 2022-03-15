@@ -45,10 +45,10 @@ spec:
     - secret: sf-brukernotifikasjon
   filesFrom:
     - secret: sf-brukernotifikasjon
-  azure:
-    application:
-      enabled: true
-      tenant: trygdeetaten.no
+#  azure:
+#    application:
+#      enabled: true
+#      tenant: trygdeetaten.no
   accessPolicy:
     inbound:
       rules:
