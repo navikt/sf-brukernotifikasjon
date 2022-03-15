@@ -58,10 +58,6 @@ spec:
   kafka:
     pool: nav-dev
   env:
-    - name: KAFKA_BROKERS
-      value: SASL_SSL://b27apvl00045.preprod.local:8443,SASL_SSL://b27apvl00046.preprod.local:8443,SASL_SSL://b27apvl00047.preprod.local:8443
-    - name: KAFKA_SCHEMA_REG
-      value: 'https://kafka-schema-registry.nais-q.adeo.no'
     - name: KAFKA_CLIENTID
       value: sf-brukernotifikasjon
     - name: KAFKA_SECURITY

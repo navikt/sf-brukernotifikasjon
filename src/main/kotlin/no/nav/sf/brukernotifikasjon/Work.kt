@@ -27,20 +27,20 @@ sealed class ExitReason {
     object Work : ExitReason()
 }
 
-val kafkaSchemaReg = AnEnvironment.getEnvOrDefault("KAFKA_SCHEMA_REG", "http://localhost:8081")
+val kafkaSchemaRegistry = AnEnvironment.getEnvOrDefault("KAFKA_SCHEMA_REGISTRY", "http://localhost:8081")
 
 data class WorkSettings(
     val kafkaConfig: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
-            "schema.registry.url" to kafkaSchemaReg
+            "schema.registry.url" to kafkaSchemaRegistry
     ),
     val kafkaConfigAlt: Map<String, Any> = AKafkaConsumer.configBase + mapOf<String, Any>(
         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to KafkaAvroDeserializer::class.java,
         ConsumerConfig.GROUP_ID_CONFIG to AnEnvironment.getEnvOrDefault(EV_kafkaClientID, PROGNAME) + "_init",
         ConsumerConfig.CLIENT_ID_CONFIG to AnEnvironment.getEnvOrDefault(EV_kafkaClientID, PROGNAME) + "_init",
-        "schema.registry.url" to kafkaSchemaReg
+        "schema.registry.url" to kafkaSchemaRegistry
     )
     // val sfClient: SalesforceClient = SalesforceClient()
 )
