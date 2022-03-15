@@ -7,16 +7,42 @@ import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.sf.library.AKafkaProducer
+import no.nav.sf.library.AnEnvironment
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.config.SslConfigs
+
+fun fetchEnv(env: String): String {
+    return AnEnvironment.getEnvOrDefault(env, "$env missing")
+}
+
+const val EV_kafkaKeystorePath = "KAFKA_KEYSTORE_PATH"
+const val EV_kafkaCredstorePassword = "KAFKA_CREDSTORE_PASSWORD"
+const val EV_kafkaTruststorePath = "KAFKA_TRUSTSTORE_PATH"
 
 class BrukernotifikasjonService {
     val kafkaProducerConfig: Map<String, Any> = AKafkaProducer.configBase + mapOf<String, Any>(
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
+            "security.protocol" to "SSL",
+            SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaKeystorePath),
+            SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
+            SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaTruststorePath),
+            SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
             "schema.registry.url" to kafkaSchemaReg
     )
+
+    /*
+    val kafkaProducerGcp: Map<String, Any> = AKafkaProducer.configBase + mapOf<String, Any>(
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to ByteArraySerializer::class.java,
+            "security.protocol" to "SSL",
+            SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaKeystorePath),
+            SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
+            SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaTruststorePath),
+            SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword)
+     */
 
     val kafkaProducerDone = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_DONE"), KafkaProducer<NokkelInput, DoneInput>(kafkaProducerConfig))
     val kafkaProducerInnboks = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_INNBOKS"), KafkaProducer<NokkelInput, InnboksInput>(kafkaProducerConfig))

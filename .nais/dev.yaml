@@ -55,6 +55,8 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: dev-external
+  kafka:
+    pool: nav-dev
   env:
     - name: KAFKA_BROKERS
       value: SASL_SSL://b27apvl00045.preprod.local:8443,SASL_SSL://b27apvl00046.preprod.local:8443,SASL_SSL://b27apvl00047.preprod.local:8443
