@@ -2,10 +2,10 @@ package no.nav.sf.brukernotifikasjon
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import mu.KotlinLogging
-import no.nav.brukernotifikasjon.schemas.Done
-import no.nav.brukernotifikasjon.schemas.Innboks
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.builders.NokkelBuilder
+import no.nav.brukernotifikasjon.schemas.builders.NokkelInputBuilder
+import no.nav.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.sf.library.AKafkaProducer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -18,21 +18,22 @@ class BrukernotifikasjonService {
             "schema.registry.url" to kafkaSchemaReg
     )
 
-    val kafkaProducerDone = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_DONE"), KafkaProducer<Nokkel, Done>(kafkaProducerConfig))
-    val kafkaProducerInnboks = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_INNBOKS"), KafkaProducer<Nokkel, Innboks>(kafkaProducerConfig))
+    val kafkaProducerDone = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_DONE"), KafkaProducer<NokkelInput, DoneInput>(kafkaProducerConfig))
+    val kafkaProducerInnboks = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_INNBOKS"), KafkaProducer<NokkelInput, InnboksInput>(kafkaProducerConfig))
 
-    private val serviceuser = "srvsfnksbrknot"
+    private val appName = "sf-brukernotifikasjon"
+    private val namespace = "teamnks"
 
-    fun createKey(eventId: String): Nokkel {
-        return NokkelBuilder().withSystembruker(serviceuser).withEventId(eventId).build()
+    fun createKey(eventId: String, grupperingsId: String, fodselsnummer: String): NokkelInput {
+        return NokkelInputBuilder().withEventId(eventId).withGrupperingsId(grupperingsId).withFodselsnummer(fodselsnummer).withAppnavn(appName).withNamespace(namespace).build()
     }
 
-    fun sendInnboks(eventId: String, innboks: Innboks) {
-        kafkaProducerInnboks.sendEvent(createKey(eventId), innboks)
+    fun sendInnboks(eventId: String, grupperingsId: String, fodselsnummer: String, innboks: InnboksInput) {
+        kafkaProducerInnboks.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), innboks)
     }
 
-    fun sendDone(eventId: String, done: Done) {
-        kafkaProducerDone.sendEvent(createKey(eventId), done)
+    fun sendDone(eventId: String, grupperingsId: String, fodselsnummer: String, done: DoneInput) {
+        kafkaProducerDone.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), done)
     }
 }
 

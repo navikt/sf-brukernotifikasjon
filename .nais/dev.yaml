@@ -34,13 +34,17 @@ spec:
       memory: 512Mi
   ingresses:
     - "https://sf-brukernotifikasjon.dev.intern.nav.no"
-  vault:
-    enabled: true
-    paths:
-      - mountPath: /var/run/secrets/nais.io/vault
-        kvPath: /kv/preprod/fss/sf-brukernotifikasjon/teamnks
-      - mountPath: /var/run/secrets/nais.io/serviceuser
-        kvPath: /serviceuser/data/dev/srvsfnksbrknot
+#  vault:
+#    enabled: true
+#    paths:
+#      - mountPath: /var/run/secrets/nais.io/vault
+#        kvPath: /kv/preprod/fss/sf-brukernotifikasjon/teamnks
+#      - mountPath: /var/run/secrets/nais.io/serviceuser
+#        kvPath: /serviceuser/data/dev/srvsfnksbrknot
+  envFrom:
+    - secret: sf-brukernotifikasjon
+  filesFrom:
+    - secret: sf-brukernotifikasjon
   azure:
     application:
       enabled: true
@@ -65,13 +69,13 @@ spec:
     - name: KAFKA_SASLMEC
       value: PLAIN
     - name: KAFKA_TOPIC_NYBESKJED
-      value: 'aapen-brukernotifikasjon-nyBeskjed-v1'
+      value: 'min-side.aapen-brukernotifikasjon-nyBeskjed-v1'
     - name: KAFKA_TOPIC_NYOPPGAVE
-      value: 'aapen-brukernotifikasjon-nyOppgave-v1'
+      value: 'min-side.aapen-brukernotifikasjon-nyOppgave-v1'
     - name: KAFKA_TOPIC_DONE
-      value: 'aapen-brukernotifikasjon-done-v1'
+      value: 'min-side.aapen-brukernotifikasjon-done-v1'
     - name: KAFKA_TOPIC_INNBOKS
-      value: 'aapen-brukernotifikasjon-nyInnboks-v1'
+      value: 'min-side.aapen-brukernotifikasjon-nyInnboks-v1'
     - name: MS_BETWEEN_WORK
       value: '240000'
     - name: SF_INSTANCE
@@ -81,4 +85,4 @@ spec:
     - name: SF_VERSION
       value: 'v48.0'
     - name: VAULT_INSTANCE
-      value: PREPROD
+      value: GCP

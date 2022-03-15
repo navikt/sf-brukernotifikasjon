@@ -29,7 +29,10 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DoneRequest"
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/DoneRequest"
+                                }
                             }
                         }
                     }
@@ -65,7 +68,10 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/InnboksRequest"
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/InnboksRequest"
+                                }
                             }
                         }
                     }
@@ -145,6 +151,21 @@
                         "type" : "string",
                         "description" : "grupperingsId",
                         "example" : "grupperingsId"
+                    },
+                    "epostVarslingstekst": {
+                        "type" : "string",
+                        "description" : "epostVarslingstekst",
+                        "example" : "epostVarslingstekst"
+                    },
+                    "epostVarslingstittel": {
+                        "type" : "string",
+                        "description" : "epostVarslingstittel",
+                        "example" : "epostVarslingstittel"
+                    },
+                    "smsVarslingstekst": {
+                        "type" : "string",
+                        "description" : "smsVarslingstekst",
+                        "example" : "smsVarslingstekst"
                     }
                 }
             }

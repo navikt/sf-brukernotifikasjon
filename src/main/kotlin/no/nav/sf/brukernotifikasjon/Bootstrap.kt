@@ -12,10 +12,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.brukernotifikasjon.schemas.builders.DoneBuilder
-import no.nav.brukernotifikasjon.schemas.builders.InnboksBuilder
+import no.nav.brukernotifikasjon.schemas.builders.DoneInputBuilder
+import no.nav.brukernotifikasjon.schemas.builders.InnboksInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
-import no.nav.sf.brukernotifikasjon.token.containsValidToken
+import no.nav.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
@@ -58,12 +59,14 @@ object Bootstrap {
         val stop = ShutdownHook.isActive() || PrestopHook.isActive()
         when {
             stop -> Unit
-            !stop -> loop(work(ws)
+            !stop -> { // Do no work, dummy loop for now
+                conditionalWait()
+                loop(ws)
+            } /*loop(work(ws)
                     .let { prevWS ->
                         prevWS.first
                     }
-                    .also { conditionalWait() }
-            )
+                    .also { conditionalWait() }*/
         }
     }
 
@@ -121,7 +124,10 @@ data class InnboksRequest(
     val prefererteKanaler: String = "",
     val tidspunkt: String,
     val fodselsnummer: String,
-    val grupperingsId: String
+    val grupperingsId: String,
+    val epostVarslingstekst: String,
+    val epostVarslingstittel: String,
+    val smsVarslingstekst: String
 )
 
 fun naisAPI(): HttpHandler = routes(
@@ -129,26 +135,43 @@ fun naisAPI(): HttpHandler = routes(
         "/innboks" bind Method.POST to {
             workMetrics.requestsInnboks.inc()
             // log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
-            if (containsValidToken(it)) { // TODO Skip validation for dev
+            if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
                 val eventId = it.queries("eventId").first()!!
-                val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), InnboksRequest::class.java)
-                val innboksbuilder = InnboksBuilder()
-                        .withEksternVarsling(innboksRequest.eksternVarsling)
-                        .withSikkerhetsnivaa(innboksRequest.sikkerhetsnivaa)
-                        .withTekst(innboksRequest.tekst)
-                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(innboksRequest.tidspunkt), ZoneOffset.UTC))
-                        .withFodselsnummer(innboksRequest.fodselsnummer)
-                        .withGrupperingsId(innboksRequest.grupperingsId)
-
-                if (innboksRequest.link.isNotEmpty()) {
-                    innboksbuilder.withLink(URL(innboksRequest.link))
+                val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
+                val result: MutableList<InnboksInput> = mutableListOf()
+                innboksRequest.forEach {
+                    val innboksbuilder = InnboksInputBuilder()
+                        .withEksternVarsling(it.eksternVarsling)
+                        .withSikkerhetsnivaa(it.sikkerhetsnivaa)
+                        .withTekst(it.tekst)
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
+                        .withEpostVarslingstekst(it.epostVarslingstekst)
+                        .withEpostVarslingstittel(it.epostVarslingstittel)
+                        .withSmsVarslingstekst(it.smsVarslingstekst)
+                    /*
+                        private String epostVarslingstekst; -- nope!
+                        private String epostVarslingstittel; -- nope!
+                        private String smsVarslingstekst; --nope !
+                     */
+                    if (it.link.isNotEmpty()) {
+                        innboksbuilder.withLink(URL(it.link))
+                    }
+                    if (it.prefererteKanaler.isNotEmpty()) {
+                        innboksbuilder.withPrefererteKanaler(
+                            *it.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }
+                                .toTypedArray()
+                        )
+                    }
+                    val innboks = innboksbuilder.build()
+                    Bootstrap.brukernotifikasjonService.sendInnboks(
+                        eventId,
+                        it.grupperingsId,
+                        it.fodselsnummer,
+                        innboks
+                    )
+                    result.add(innboks)
                 }
-                if (innboksRequest.prefererteKanaler.isNotEmpty()) {
-                    innboksbuilder.withPrefererteKanaler(*innboksRequest.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }.toTypedArray())
-                }
-                val innboks = innboksbuilder.build()
-                Bootstrap.brukernotifikasjonService.sendInnboks(eventId, innboks)
-                Response(Status.OK).body("Published $innboks")
+                Response(Status.OK).body("Published $result")
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
@@ -157,18 +180,18 @@ fun naisAPI(): HttpHandler = routes(
         "/done" bind Method.POST to {
             workMetrics.requestsDone.inc()
             // log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
-            if (containsValidToken(it)) {
+            if (true/*containsValidToken(it)*/) {
                 val eventId = it.queries("eventId").first()!!
-                val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), DoneRequest::class.java)
-
-                val done = DoneBuilder()
-                        .withFodselsnummer(doneRequest.fodselsnummer)
-                        .withGrupperingsId(doneRequest.grupperingsId)
-                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(doneRequest.tidspunkt), ZoneOffset.UTC))
+                val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
+                val result: MutableList<DoneInput> = mutableListOf()
+                doneRequest.forEach {
+                    val done = DoneInputBuilder()
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
                         .build()
-
-                Bootstrap.brukernotifikasjonService.sendDone(eventId, done)
-                Response(Status.OK).body("Published $done")
+                    Bootstrap.brukernotifikasjonService.sendDone(eventId, it.grupperingsId, it.fodselsnummer, done)
+                    result.add(done)
+                }
+                Response(Status.OK).body("Published $result")
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
