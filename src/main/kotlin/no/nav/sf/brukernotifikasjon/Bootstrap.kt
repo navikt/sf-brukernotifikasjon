@@ -134,7 +134,7 @@ fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             workMetrics.requestsInnboks.inc()
-            // log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
+            log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
             if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
                 val eventId = it.queries("eventId").first()!!
                 val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
@@ -179,7 +179,7 @@ fun naisAPI(): HttpHandler = routes(
         },
         "/done" bind Method.POST to {
             workMetrics.requestsDone.inc()
-            // log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
+            log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
             if (true/*containsValidToken(it)*/) {
                 val eventId = it.queries("eventId").first()!!
                 val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
