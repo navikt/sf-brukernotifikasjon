@@ -2,10 +2,10 @@
     "openapi": "3.0.2",
     "info": {
         "title": "Salesforce brukernotifikasjon API",
-        "version": "1.0"
+        "version": "2.0"
     },
     "servers": [
-        { "url": "https://sf-brukernotifikasjon.dev.intern.nav.no" }
+        { "url": "https://sf-brukernotifikasjon.v2.dev.intern.nav.no" }
     ],
     "paths": {
         "/done": {
