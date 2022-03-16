@@ -212,7 +212,7 @@ fun naisAPI(): HttpHandler = routes(
                     val error = sw.toString()
 
                     println("Error:\n$error")
-                    Response(Status.OK).body("Caught exception: ${e}\nstack:$error")
+                    Response(Status.OK).body("Used: ${Bootstrap.brukernotifikasjonService.schemaUsed} Caught exception: ${e}\nstack:$error")
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }

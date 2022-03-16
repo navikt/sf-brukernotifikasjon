@@ -21,9 +21,8 @@ const val EV_kafkaKeystorePath = "KAFKA_KEYSTORE_PATH"
 const val EV_kafkaCredstorePassword = "KAFKA_CREDSTORE_PASSWORD"
 const val EV_kafkaTruststorePath = "KAFKA_TRUSTSTORE_PATH"
 
-val schemaUsed = fetchEnv(kafkaSchemaRegistry)
-
 class BrukernotifikasjonService {
+    val schemaUsed = fetchEnv(kafkaSchemaRegistry)
     val kafkaProducerConfig: Map<String, Any> = AKafkaProducer.configBase + mapOf<String, Any>(
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
