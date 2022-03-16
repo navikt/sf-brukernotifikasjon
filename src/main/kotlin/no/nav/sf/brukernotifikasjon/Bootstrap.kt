@@ -3,6 +3,7 @@ package no.nav.sf.brukernotifikasjon
 import com.google.gson.Gson
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
+import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.URL
 import java.time.Instant
@@ -200,7 +201,18 @@ fun naisAPI(): HttpHandler = routes(
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
                     log.error { e }
-                    Response(Status.OK).body(e.toString() + " message:" + e.message ?: "")
+                    val sw = StringWriter()
+
+                    // create a PrintWriter
+
+                    // create a PrintWriter
+                    val pw = PrintWriter(sw)
+                    e.printStackTrace(pw)
+
+                    val error = sw.toString()
+
+                    println("Error:\n$error")
+                    Response(Status.OK).body("Caught exception: ${e}\nstack:$error")
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
