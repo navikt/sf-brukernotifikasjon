@@ -182,16 +182,20 @@ fun naisAPI(): HttpHandler = routes(
             log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
             if (true/*containsValidToken(it)*/) {
                 val eventId = it.queries("eventId").first()!!
-                val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
-                val result: MutableList<DoneInput> = mutableListOf()
-                doneRequest.forEach {
-                    val done = DoneInputBuilder()
-                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                        .build()
-                    Bootstrap.brukernotifikasjonService.sendDone(eventId, it.grupperingsId, it.fodselsnummer, done)
-                    result.add(done)
+                try {
+                    val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
+                    val result: MutableList<DoneInput> = mutableListOf()
+                    doneRequest.forEach {
+                        val done = DoneInputBuilder()
+                            .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
+                            .build()
+                        Bootstrap.brukernotifikasjonService.sendDone(eventId, it.grupperingsId, it.fodselsnummer, done)
+                        result.add(done)
+                    }
+                    Response(Status.OK).body("Published $result")
+                } catch (e: Exception) {
+                    Response(Status.EXPECTATION_FAILED).body(e.stackTrace.toString() + "\n\n ${e.message}")
                 }
-                Response(Status.OK).body("Published $result")
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
