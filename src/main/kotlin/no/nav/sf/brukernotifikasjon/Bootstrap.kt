@@ -194,6 +194,8 @@ fun naisAPI(): HttpHandler = routes(
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
+                    log.error { "Message: ${e.message}, whole exeception$e " }
+                    log.error { "Stack: ${e.stackTrace}" }
                     Response(Status.EXPECTATION_FAILED).body(e.stackTrace.toString() + "\n\n ${e.message}")
                 }
             } else {

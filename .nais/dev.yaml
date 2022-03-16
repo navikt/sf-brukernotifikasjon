@@ -33,7 +33,7 @@ spec:
       cpu: 100m
       memory: 512Mi
   ingresses:
-    - "https://sf-brukernotifikasjon.v2.dev.intern.nav.no"
+    - "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
 #  vault:
 #    enabled: true
 #    paths:
