@@ -197,7 +197,9 @@ fun naisAPI(): HttpHandler = routes(
                 Response(Status.UNAUTHORIZED)
             }
         },
-        NAIS_ISALIVE bind Method.GET to { Response(Status.OK) },
+        "/test" bind Method.GET to {
+            Response(Status.OK).body("Test called received")
+        },
         NAIS_ISREADY bind Method.GET to { Response(Status.OK) },
         NAIS_METRICS bind Method.GET to {
             runCatching {
