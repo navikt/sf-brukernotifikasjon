@@ -137,41 +137,46 @@ fun naisAPI(): HttpHandler = routes(
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
             if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
                 val eventId = it.queries("eventId").first()!!
-                val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
-                val result: MutableList<InnboksInput> = mutableListOf()
-                innboksRequest.forEach {
-                    val innboksbuilder = InnboksInputBuilder()
-                        .withEksternVarsling(it.eksternVarsling)
-                        .withSikkerhetsnivaa(it.sikkerhetsnivaa)
-                        .withTekst(it.tekst)
-                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                        .withEpostVarslingstekst(it.epostVarslingstekst)
-                        .withEpostVarslingstittel(it.epostVarslingstittel)
-                        .withSmsVarslingstekst(it.smsVarslingstekst)
-                    /*
+                try {
+                    val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
+                    val result: MutableList<InnboksInput> = mutableListOf()
+                    innboksRequest.forEach {
+                        val innboksbuilder = InnboksInputBuilder()
+                            .withEksternVarsling(it.eksternVarsling)
+                            .withSikkerhetsnivaa(it.sikkerhetsnivaa)
+                            .withTekst(it.tekst)
+                            .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
+                            .withEpostVarslingstekst(it.epostVarslingstekst)
+                            .withEpostVarslingstittel(it.epostVarslingstittel)
+                            .withSmsVarslingstekst(it.smsVarslingstekst)
+                        /*
                         private String epostVarslingstekst; -- nope!
                         private String epostVarslingstittel; -- nope!
                         private String smsVarslingstekst; --nope !
                      */
-                    if (it.link.isNotEmpty()) {
-                        innboksbuilder.withLink(URL(it.link))
-                    }
-                    if (it.prefererteKanaler.isNotEmpty()) {
-                        innboksbuilder.withPrefererteKanaler(
-                            *it.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }
-                                .toTypedArray()
+                        if (it.link.isNotEmpty()) {
+                            innboksbuilder.withLink(URL(it.link))
+                        }
+                        if (it.prefererteKanaler.isNotEmpty()) {
+                            innboksbuilder.withPrefererteKanaler(
+                                *it.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }
+                                    .toTypedArray()
+                            )
+                        }
+                        val innboks = innboksbuilder.build()
+                        Bootstrap.brukernotifikasjonService.sendInnboks(
+                            eventId,
+                            it.grupperingsId,
+                            it.fodselsnummer,
+                            innboks
                         )
+                        result.add(innboks)
                     }
-                    val innboks = innboksbuilder.build()
-                    Bootstrap.brukernotifikasjonService.sendInnboks(
-                        eventId,
-                        it.grupperingsId,
-                        it.fodselsnummer,
-                        innboks
-                    )
-                    result.add(innboks)
+                    Response(Status.OK).body("Published $result")
+                } catch (e: Exception) {
+                    log.error { e }
+                    Response(Status.OK).body(e.message ?: "")
                 }
-                Response(Status.OK).body("Published $result")
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
@@ -194,9 +199,8 @@ fun naisAPI(): HttpHandler = routes(
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
-                    log.error { "Message: ${e.message}, whole exeception$e " }
-                    log.error { "Stack: ${e.stackTrace}" }
-                    Response(Status.EXPECTATION_FAILED).body(e.stackTrace.toString() + "\n\n ${e.message}")
+                    log.error { e }
+                    Response(Status.OK).body(e.message ?: "")
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
