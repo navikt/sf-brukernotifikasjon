@@ -200,7 +200,7 @@ fun naisAPI(): HttpHandler = routes(
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
                     log.error { e }
-                    Response(Status.OK).body(e.message ?: "")
+                    Response(Status.OK).body(e.toString() + " message:" + e.message ?: "")
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }

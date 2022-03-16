@@ -30,7 +30,7 @@ class BrukernotifikasjonService {
             SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
             SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaTruststorePath),
             SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
-            "schema.registry.url" to kafkaSchemaRegistry
+            "schema.registry.url" to fetchEnv(kafkaSchemaRegistry)
     )
 
     /*
