@@ -4,7 +4,6 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.netty.util.NetUtil
 import java.net.InetSocketAddress
-import java.net.URI
 import java.util.Properties
 import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.builders.NokkelInputBuilder
