@@ -1,26 +1,24 @@
 package no.nav.sf.brukernotifikasjon.config
 
-import java.net.URL
 import no.nav.sf.brukernotifikasjon.config.BooleanEnvVar.getEnvVarAsBoolean
 import no.nav.sf.brukernotifikasjon.config.ConfigUtil.isCurrentlyRunningOnNais
 import no.nav.sf.brukernotifikasjon.config.StringEnvVar.getEnvVar
-import no.nav.sf.brukernotifikasjon.config.UrlEnvVar.getEnvVarAsURL
 
 data class Environment(
     val namespace: String = getEnvVar("NAIS_NAMESPACE"),
     val appnavn: String = "tms-event-test-producer",
-    val beskjedInputTopicName: String = getEnvVar("OPEN_INPUT_BESKJED_TOPIC"),
-    val oppgaveInputTopicName: String = getEnvVar("OPEN_INPUT_OPPGAVE_TOPIC"),
-    val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
-    val statusoppdateringInputTopicName: String = getEnvVar("OPEN_INPUT_STATUSOPPDATERING_TOPIC"),
-    val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
+//    val beskjedInputTopicName: String = getEnvVar("OPEN_INPUT_BESKJED_TOPIC"),
+//    val oppgaveInputTopicName: String = getEnvVar("OPEN_INPUT_OPPGAVE_TOPIC"),
+//    val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
+//    val statusoppdateringInputTopicName: String = getEnvVar("OPEN_INPUT_STATUSOPPDATERING_TOPIC"),
+//    val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
     val aivenBrokers: String = getEnvVar("KAFKA_BROKERS"),
     val aivenSchemaRegistry: String = getEnvVar("KAFKA_SCHEMA_REGISTRY"),
     val securityConfig: SecurityConfig = SecurityConfig(isCurrentlyRunningOnNais()),
-    val eventHandlerURL: URL = getEnvVarAsURL("EVENT_HANDLER_URL", trimTrailingSlash = true),
-    val eventhandlerClientId: String = getEnvVar("EVENTHANDLER_CLIENT_ID"),
+//    val eventHandlerURL: URL = getEnvVarAsURL("EVENT_HANDLER_URL", trimTrailingSlash = true),
+//    val eventhandlerClientId: String = getEnvVar("EVENTHANDLER_CLIENT_ID"),
     val enableApi: Boolean = getEnvVarAsBoolean("ENABLE_API", false),
-    val corsAllowedOrigins: String = getEnvVar("CORS_ALLOWED_ORIGINS"),
+//    val corsAllowedOrigins: String = getEnvVar("CORS_ALLOWED_ORIGINS"),
     val corsAllowedSchemes: String = getEnvVar("CORS_ALLOWED_SCHEMES", "https")
 )
 
