@@ -34,13 +34,6 @@ spec:
       memory: 512Mi
   ingresses:
     - "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
-#  vault:
-#    enabled: true
-#    paths:
-#      - mountPath: /var/run/secrets/nais.io/vault
-#        kvPath: /kv/preprod/fss/sf-brukernotifikasjon/teamnks
-#      - mountPath: /var/run/secrets/nais.io/serviceuser
-#        kvPath: /serviceuser/data/dev/srvsfnksbrknot
   envFrom:
     - secret: sf-brukernotifikasjon
   filesFrom:
@@ -60,12 +53,6 @@ spec:
   env:
     - name: KAFKA_CLIENTID
       value: sf-brukernotifikasjon
-    - name: KAFKA_SECURITY
-      value: 'TRUE'
-    - name: KAFKA_SECPROT
-      value: SASL_SSL
-    - name: KAFKA_SASLMEC
-      value: PLAIN
     - name: KAFKA_TOPIC_NYBESKJED
       value: 'min-side.aapen-brukernotifikasjon-nyBeskjed-v1'
     - name: KAFKA_TOPIC_NYOPPGAVE

@@ -40,34 +40,29 @@ private val bootstrapWaitTime = AnEnvironment.getEnvOrDefault(EV_bootstrapWaitTi
 private val log = KotlinLogging.logger { }
 
 object Bootstrap {
+    val gson = Gson()
 
     private val log = KotlinLogging.logger { }
 
     val brukernotifikasjonService = BrukernotifikasjonService()
 
-    val gson = Gson()
-
-    fun start(ws: WorkSettings = WorkSettings()) {
+    fun start() {
         log.info { "Starting" }
         enableNAISAPIModified {
-            // investigate(ws)
-            loop(ws)
+            loop()
         }
         log.info { "Finished!" }
     }
 
-    private tailrec fun loop(ws: WorkSettings) {
+    private tailrec fun loop() {
         val stop = ShutdownHook.isActive() || PrestopHook.isActive()
         when {
             stop -> Unit
-            !stop -> { // Do no work, dummy loop for now
+            !stop -> {
+                // Currently no work sessions, just a dummy loop listening to hooks
                 conditionalWait()
-                loop(ws)
-            } /*loop(work(ws)
-                    .let { prevWS ->
-                        prevWS.first
-                    }
-                    .also { conditionalWait() }*/
+                loop()
+            }
         }
     }
 
@@ -134,7 +129,6 @@ data class InnboksRequest(
 fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
-            workMetrics.requestsInnboks.inc()
             log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
             if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
                 val eventId = it.queries("eventId").first()!!
@@ -184,7 +178,7 @@ fun naisAPI(): HttpHandler = routes(
             }
         },
         "/done" bind Method.POST to {
-            workMetrics.requestsDone.inc()
+            // workMetrics.requestsDone.inc()
             log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
             if (true/*containsValidToken(it)*/) {
                 val eventId = it.queries("eventId").first()!!
@@ -200,27 +194,18 @@ fun naisAPI(): HttpHandler = routes(
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
-                    log.error { e }
                     val sw = StringWriter()
-
-                    // create a PrintWriter
-
-                    // create a PrintWriter
                     val pw = PrintWriter(sw)
                     e.printStackTrace(pw)
-
                     val error = sw.toString()
 
-                    println("Error:\n$error")
-                    Response(Status.OK).body("Used: ${Bootstrap.brukernotifikasjonService.schemaUsed} Caught exception: ${e}\nstack:$error")
+                    log.error { error }
+                    Response(Status.EXPECTATION_FAILED)
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
             }
-        },
-        "/test" bind Method.GET to {
-            Response(Status.OK).body("Test called received")
         },
         NAIS_ISREADY bind Method.GET to { Response(Status.OK) },
         NAIS_METRICS bind Method.GET to {

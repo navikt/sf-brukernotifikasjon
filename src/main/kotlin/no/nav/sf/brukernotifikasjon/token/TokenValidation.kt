@@ -24,8 +24,7 @@ val multiIssuerConfiguration = MultiIssuerConfiguration(
 private val jwtTokenValidationHandler = JwtTokenValidationHandler(multiIssuerConfiguration)
 
 fun containsValidToken(request: Request): Boolean {
-
-    return true // TODO HighJack
+    return true // TODO No validation for now
     val firstValidToken = jwtTokenValidationHandler.getValidatedTokens(fromHttp4kRequest(request)).firstValidToken
     return firstValidToken.isPresent
 }
