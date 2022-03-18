@@ -5,7 +5,12 @@
         "version": "2.0"
     },
     "servers": [
-        { "url": "https://sf-brukernotifikasjon-v2.ekstern.dev.nav.no", "url": "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"}
+        {
+            "url": "https://sf-brukernotifikasjon-v2.ekstern.dev.nav.no"
+        },
+        {
+            "url": "https://sf-brukernotifikasjon-v2.intern.dev.nav.no"
+        }
     ],
     "paths": {
         "/done": {
