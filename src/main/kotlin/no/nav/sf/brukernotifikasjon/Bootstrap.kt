@@ -110,7 +110,7 @@ internal val preStopHook: Gauge = Gauge
 private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
 
-data class DoneRequest(val eventId : String, val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(val eventId: String, val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
 
 data class InnboksRequest(
     val eventId: String,
