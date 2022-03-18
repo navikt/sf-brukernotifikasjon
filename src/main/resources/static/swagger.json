@@ -12,17 +12,6 @@
             "post": {
                 "tags": ["Done"],
                 "description": "Endepunkt for å sende Done til brukernotifikasjon",
-                "parameters": [
-                    {
-                        "name": "eventId",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Unik ID til notifikasjonen"
-                    }
-                ],
                 "requestBody": {
                     "required": true,
                     "description": "Kafka parametrar",
@@ -51,17 +40,6 @@
             "post": {
                 "tags": ["Innboks"],
                 "description": "Endepunkt for å sende Innboks til brukernotifikasjon",
-                "parameters": [
-                    {
-                        "name": "eventId",
-                        "in": "query",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Unik ID til notifikasjonen"
-                    }
-                ],
                 "requestBody": {
                     "required": true,
                     "description": "Kafka parametrar",
@@ -92,6 +70,11 @@
             "DoneRequest": {
                 "type": "object",
                 "properties": {
+                    "eventId": {
+                        "type" : "string",
+                        "description" : "Den unike identifikatoren per event, må enten være en UUID eller en ULID",
+                        "example": "10af10b8-a697-11ec-b909-0242ac120002"
+                    },
                     "tidspunkt": {
                         "type": "string",
                         "description": "Datetime string",
@@ -111,6 +94,11 @@
             "InnboksRequest": {
                 "type": "object",
                 "properties": {
+                    "eventId": {
+                        "type" : "string",
+                        "description" : "Den unike identifikatoren per event, må enten være en UUID eller en ULID",
+                        "example": "10af10b8-a697-11ec-b909-0242ac120002"
+                    },
                     "eksternVarsling": {
                         "type": "boolean",
                         "description": "eksternVarsling",

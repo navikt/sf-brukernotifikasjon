@@ -110,9 +110,10 @@ internal val preStopHook: Gauge = Gauge
 private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
 
-data class DoneRequest(val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(val eventId : String, val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
 
 data class InnboksRequest(
+    val eventId: String,
     val eksternVarsling: Boolean = false,
     val link: String = "",
     val sikkerhetsnivaa: Int = 4,
@@ -129,9 +130,8 @@ data class InnboksRequest(
 fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
-            log.info { "innboks called with body ${it.bodyString()}, queries eventId: ${it.queries("eventId")}" }
+            log.info { "innboks called with body ${it.bodyString()}" }
             if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
-                val eventId = it.queries("eventId").first()!!
                 try {
                     val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
                     val result: MutableList<InnboksInput> = mutableListOf()
@@ -160,7 +160,7 @@ fun naisAPI(): HttpHandler = routes(
                         }
                         val innboks = innboksbuilder.build()
                         Bootstrap.brukernotifikasjonService.sendInnboks(
-                            eventId,
+                            it.eventId,
                             it.grupperingsId,
                             it.fodselsnummer,
                             innboks
@@ -179,9 +179,8 @@ fun naisAPI(): HttpHandler = routes(
         },
         "/done" bind Method.POST to {
             // workMetrics.requestsDone.inc()
-            log.info { "done called with body ${it.bodyString()},  queries eventId: ${it.queries("eventId")}" }
+            log.info { "done called with body ${it.bodyString()}" }
             if (true/*containsValidToken(it)*/) {
-                val eventId = it.queries("eventId").first()!!
                 try {
                     val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
                     val result: MutableList<DoneInput> = mutableListOf()
@@ -189,7 +188,7 @@ fun naisAPI(): HttpHandler = routes(
                         val done = DoneInputBuilder()
                             .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
                             .build()
-                        Bootstrap.brukernotifikasjonService.sendDone(eventId, it.grupperingsId, it.fodselsnummer, done)
+                        Bootstrap.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                         result.add(done)
                     }
                     Response(Status.OK).body("Published $result")
@@ -198,7 +197,6 @@ fun naisAPI(): HttpHandler = routes(
                     val pw = PrintWriter(sw)
                     e.printStackTrace(pw)
                     val error = sw.toString()
-
                     log.error { error }
                     Response(Status.EXPECTATION_FAILED)
                 }
