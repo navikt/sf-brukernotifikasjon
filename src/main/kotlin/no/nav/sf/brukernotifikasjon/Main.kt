@@ -1,3 +1,3 @@
 package no.nav.sf.brukernotifikasjon
 
-fun main() = Bootstrap.start()
+fun main() = Application.start()

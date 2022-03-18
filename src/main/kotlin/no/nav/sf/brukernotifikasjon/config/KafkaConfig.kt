@@ -1,17 +1,15 @@
-package no.nav.sf.brukernotifikasjon
+package no.nav.sf.brukernotifikasjon.config
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import java.util.Properties
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
-import no.nav.sf.brukernotifikasjon.config.Environment
-import no.nav.sf.brukernotifikasjon.config.SecurityVars
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 
-object Kafka {
+object KafkaConfig {
     fun producerProps(env: Environment, type: Eventtype): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
@@ -44,17 +42,4 @@ object Kafka {
             put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
         }
     }
-
-    /*
-    val kafkaProducerConfig: Map<String, Any> = AKafkaProducer.configBase + mapOf<String, Any>(
-        ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
-        ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to KafkaAvroSerializer::class.java,
-        "security.protocol" to "SSL",
-        SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaKeystorePath),
-        SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
-        SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to fetchEnv(EV_kafkaTruststorePath),
-        SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to fetchEnv(EV_kafkaCredstorePassword),
-        "schema.registry.url" to fetchEnv(kafkaSchemaRegistry)
-    )
-     */
 }

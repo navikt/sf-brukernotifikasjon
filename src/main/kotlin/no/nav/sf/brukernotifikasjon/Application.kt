@@ -40,7 +40,7 @@ private val bootstrapWaitTime = AnEnvironment.getEnvOrDefault(EV_bootstrapWaitTi
 
 private val log = KotlinLogging.logger { }
 
-object Bootstrap {
+object Application {
     val gson = Gson()
 
     private val log = KotlinLogging.logger { }
@@ -49,7 +49,7 @@ object Bootstrap {
 
     fun start() {
         log.info { "Starting" }
-        enableNAISAPIModified {
+        enableAPI {
             loop()
         }
         log.info { "Finished!" }
@@ -92,8 +92,6 @@ object Bootstrap {
             }
 }
 
-// From NaisDSL.kt:
-
 const val NAIS_URL = "http://localhost:"
 const val NAIS_DEFAULT_PORT = 8080
 
@@ -134,7 +132,7 @@ fun naisAPI(): HttpHandler = routes(
             log.info { "innboks called with body ${it.bodyString()}" }
             if (containsValidToken(it)) { // TODO Skip validation for dev
                 try {
-                    val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
+                    val innboksRequest = Application.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
                     val result: MutableList<InnboksInput> = mutableListOf()
                     innboksRequest.forEach {
                         val innboksbuilder = InnboksInputBuilder()
@@ -145,11 +143,6 @@ fun naisAPI(): HttpHandler = routes(
                             .withEpostVarslingstekst(it.epostVarslingstekst)
                             .withEpostVarslingstittel(it.epostVarslingstittel)
                             .withSmsVarslingstekst(it.smsVarslingstekst)
-                        /*
-                        private String epostVarslingstekst; -- nope!
-                        private String epostVarslingstittel; -- nope!
-                        private String smsVarslingstekst; --nope !
-                     */
                         if (it.link.isNotEmpty()) {
                             innboksbuilder.withLink(URL(it.link))
                         }
@@ -160,7 +153,7 @@ fun naisAPI(): HttpHandler = routes(
                             )
                         }
                         val innboks = innboksbuilder.build()
-                        Bootstrap.brukernotifikasjonService.sendInnboks(
+                        Application.brukernotifikasjonService.sendInnboks(
                             it.eventId,
                             it.grupperingsId,
                             it.fodselsnummer,
@@ -187,22 +180,18 @@ fun naisAPI(): HttpHandler = routes(
             log.info { "done called with body ${it.bodyString()}" }
             if (containsValidToken(it)) {
                 try {
-                    val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
+                    val doneRequest = Application.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
                     val result: MutableList<DoneInput> = mutableListOf()
                     doneRequest.forEach {
                         val done = DoneInputBuilder()
                             .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
                             .build()
-                        Bootstrap.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
+                        Application.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                         result.add(done)
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
-                    val sw = StringWriter()
-                    val pw = PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    val error = sw.toString()
-                    log.error { error }
+                    log.error { e }
                     Response(Status.EXPECTATION_FAILED)
                 }
             } else {
@@ -234,7 +223,7 @@ fun naisAPI(): HttpHandler = routes(
 
 fun naisAPIServer(port: Int): Http4kServer = naisAPI().asServer(Netty(port))
 
-fun enableNAISAPIModified(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
+fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
         naisAPIServer(port).let { srv ->
             try {
                 srv.start().use {

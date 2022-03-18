@@ -1,2 +1,4 @@
 # sf-brukernotifikasjon
-Integration før brukernotifikasjon till sf
+API før salesforce til brukernotifikasjon
+
+Førlaga til producer 
