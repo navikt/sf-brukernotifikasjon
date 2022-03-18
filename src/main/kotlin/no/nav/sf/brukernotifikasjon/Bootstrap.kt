@@ -169,8 +169,12 @@ fun naisAPI(): HttpHandler = routes(
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
-                    log.error { e }
-                    Response(Status.OK).body(e.message ?: "")
+                    val sw = StringWriter()
+                    val pw = PrintWriter(sw)
+                    e.printStackTrace(pw)
+                    val error = sw.toString()
+                    log.error { error }
+                    Response(Status.OK).body(error)
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
