@@ -71,3 +71,5 @@ spec:
       value: 'v48.0'
     - name: VAULT_INSTANCE
       value: GCP
+    - name: MS_BETWEEN_WORK
+      value: 6000000

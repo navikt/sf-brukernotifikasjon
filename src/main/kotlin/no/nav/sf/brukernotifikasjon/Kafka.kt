@@ -2,8 +2,6 @@ package no.nav.sf.brukernotifikasjon
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
-import io.netty.util.NetUtil
-import java.net.InetSocketAddress
 import java.util.Properties
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.sf.brukernotifikasjon.config.Environment
@@ -18,7 +16,7 @@ object Kafka {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
-            put(ProducerConfig.CLIENT_ID_CONFIG, type.name + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.appnavn + type.name)
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
