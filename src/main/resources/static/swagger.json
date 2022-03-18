@@ -102,7 +102,7 @@
                     "eksternVarsling": {
                         "type": "boolean",
                         "description": "eksternVarsling",
-                        "example": false
+                        "example": true
                     },
                     "link": {
                         "type" : "string",
