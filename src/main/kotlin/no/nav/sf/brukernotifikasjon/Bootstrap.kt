@@ -18,6 +18,7 @@ import no.nav.brukernotifikasjon.schemas.builders.InnboksInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.sf.brukernotifikasjon.token.containsValidToken
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
@@ -131,7 +132,7 @@ fun naisAPI(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}" }
-            if (true /*containsValidToken(it)*/) { // TODO Skip validation for dev
+            if (containsValidToken(it)) { // TODO Skip validation for dev
                 try {
                     val innboksRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
                     val result: MutableList<InnboksInput> = mutableListOf()
@@ -184,7 +185,7 @@ fun naisAPI(): HttpHandler = routes(
         "/done" bind Method.POST to {
             // workMetrics.requestsDone.inc()
             log.info { "done called with body ${it.bodyString()}" }
-            if (true/*containsValidToken(it)*/) {
+            if (containsValidToken(it)) {
                 try {
                     val doneRequest = Bootstrap.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
                     val result: MutableList<DoneInput> = mutableListOf()
