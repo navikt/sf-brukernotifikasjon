@@ -49,9 +49,10 @@ object Application {
 
     fun start() {
         log.info { "Starting" }
-        enableAPI {
-            loop()
-        }
+        naisAPIServer(NAIS_DEFAULT_PORT).start()
+        // enableAPI {
+        //    loop()
+        // }
         log.info { "Finished!" }
     }
 
