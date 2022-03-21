@@ -67,6 +67,7 @@
             }
         }
     },
+    "security": [{ "Auth": [] }],
     "components": {
         "schemas": {
             "DoneRequest": {
@@ -158,6 +159,12 @@
                         "example" : "smsVarslingstekst"
                     }
                 }
+            }
+        },
+        "securitySchemes": {
+            "Auth": {
+                "type": "http",
+                "scheme": "bearer"
             }
         }
     }
