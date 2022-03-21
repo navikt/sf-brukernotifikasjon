@@ -6,7 +6,7 @@
     },
     "servers": [
         {
-            "url": "https://sf-brukernotifikasjon-v2.intern.dev.nav.no"
+            "url": "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
         }
     ],
     "paths": {
