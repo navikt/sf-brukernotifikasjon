@@ -7,12 +7,7 @@ import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.sf.brukernotifikasjon.config.Environment
 import no.nav.sf.brukernotifikasjon.config.KafkaConfig
-import no.nav.sf.library.AnEnvironment
 import org.apache.kafka.clients.producer.KafkaProducer
-
-fun fetchEnv(env: String): String {
-    return AnEnvironment.getEnvOrDefault(env, "$env missing")
-}
 
 class BrukernotifikasjonService {
     val environment = Environment()
@@ -20,9 +15,6 @@ class BrukernotifikasjonService {
         KafkaConfig.producerProps(environment, Eventtype.DONE)))
     val kafkaProducerInnboks = KafkaProducerWrapper(System.getenv("KAFKA_TOPIC_INNBOKS"), KafkaProducer<NokkelInput, InnboksInput>(
         KafkaConfig.producerProps(environment, Eventtype.INNBOKS)))
-
-    private val appName = "sf-brukernotifikasjon"
-    private val namespace = "teamnks"
 
     fun sendInnboks(eventId: String, grupperingsId: String, fodselsnummer: String, innboks: InnboksInput) {
         kafkaProducerInnboks.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), innboks)
@@ -37,8 +29,8 @@ class BrukernotifikasjonService {
             .withEventId(eventId)
             .withFodselsnummer(fodselsnummer)
             .withGrupperingsId(grupperingsId)
-            .withNamespace(namespace)
-            .withAppnavn(appName)
+            .withNamespace(environment.namespace)
+            .withAppnavn(environment.appnavn)
             .build()
     }
 }

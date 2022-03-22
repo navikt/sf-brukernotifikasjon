@@ -28,8 +28,3 @@ data class SecurityVars(
     val aivenSchemaRegistryUser: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_USER"),
     val aivenSchemaRegistryPassword: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD")
 )
-
-fun getEnvVar(varName: String): String {
-    return System.getenv(varName)
-            ?: throw IllegalArgumentException("Appen kan ikke starte uten av miljøvariabelen $varName er satt.")
-}
