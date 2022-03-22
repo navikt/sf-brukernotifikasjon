@@ -1,4 +1,4 @@
-package no.nav.sf.brukernotifikasjon
+package no.nav.sf.brukernotifikasjon.service
 
 import mu.KotlinLogging
 import org.apache.kafka.clients.producer.KafkaProducer

@@ -3,26 +3,22 @@ package no.nav.sf.brukernotifikasjon
 import com.google.gson.Gson
 import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
-import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.URL
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.builders.DoneInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.InnboksInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
-import no.nav.sf.brukernotifikasjon.token.containsValidToken
+import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
+import no.nav.sf.brukernotifikasjon.token.TokenValidation.containsValidToken
 import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
-import no.nav.sf.library.ShutdownHook
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
@@ -49,89 +45,17 @@ object Application {
 
     fun start() {
         log.info { "Starting" }
-        naisAPIServer(NAIS_DEFAULT_PORT).start()
-        // enableAPI {
-        //    loop()
-        // }
+        apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }
 
-    private tailrec fun loop() {
-        val stop = ShutdownHook.isActive() || PrestopHook.isActive()
-        when {
-            stop -> Unit
-            !stop -> {
-                // Currently no work sessions, just a dummy loop listening to hooks
-                conditionalWait()
-                loop()
-            }
-        }
-    }
+    fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    private fun conditionalWait(ms: Long = bootstrapWaitTime) =
-            runBlocking {
-
-                log.debug { "Will wait $ms ms before starting all over" }
-
-                val cr = launch {
-                    runCatching { delay(ms) }
-                            .onSuccess { log.debug { "waiting completed" } }
-                            .onFailure { log.debug { "waiting interrupted" } }
-                }
-
-                tailrec suspend fun loop(): Unit = when {
-                    cr.isCompleted -> Unit
-                    ShutdownHook.isActive() || PrestopHook.isActive() -> cr.cancel()
-                    else -> {
-                        delay(250L)
-                        loop()
-                    }
-                }
-
-                loop()
-                cr.join()
-            }
-}
-
-const val NAIS_URL = "http://localhost:"
-const val NAIS_DEFAULT_PORT = 8080
-
-const val NAIS_ISALIVE = "/isAlive"
-const val NAIS_ISREADY = "/isReady"
-const val NAIS_METRICS = "/metrics"
-const val NAIS_PRESTOP = "/stop"
-
-internal val preStopHook: Gauge = Gauge
-        .build()
-        .name("pre_stop__hook_gauge")
-        .help("No. of preStopHook activations since last restart")
-        .register()
-
-private fun String.responseByContent(): Response =
-        if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
-
-data class DoneRequest(val eventId: String, val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
-
-data class InnboksRequest(
-    val eventId: String,
-    val eksternVarsling: Boolean = false,
-    val link: String = "",
-    val sikkerhetsnivaa: Int = 4,
-    val tekst: String,
-    val prefererteKanaler: String = "",
-    val tidspunkt: String,
-    val fodselsnummer: String,
-    val grupperingsId: String,
-    val epostVarslingstekst: String,
-    val epostVarslingstittel: String,
-    val smsVarslingstekst: String
-)
-
-fun naisAPI(): HttpHandler = routes(
+    fun api(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             log.info { "innboks called with body ${it.bodyString()}" }
-            if (containsValidToken(it)) { // TODO Skip validation for dev
+            if (containsValidToken(it)) {
                 try {
                     val innboksRequest = Application.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
                     val result: MutableList<InnboksInput> = mutableListOf()
@@ -164,12 +88,14 @@ fun naisAPI(): HttpHandler = routes(
                     }
                     Response(Status.OK).body("Published $result")
                 } catch (e: Exception) {
+                    /*
                     val sw = StringWriter()
                     val pw = PrintWriter(sw)
                     e.printStackTrace(pw)
                     val error = sw.toString()
-                    log.error { error }
-                    Response(Status.EXPECTATION_FAILED).body(error)
+                     */
+                    log.error { e.toString() }
+                    Response(Status.EXPECTATION_FAILED).body(e.toString())
                 }
             } else {
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
@@ -209,11 +135,11 @@ fun naisAPI(): HttpHandler = routes(
                     str
                 }.toString()
             }
-                    .onFailure {
-                        log.error { "/prometheus failed writing metrics - ${it.localizedMessage}" }
-                    }
-                    .getOrDefault("")
-                    .responseByContent()
+                .onFailure {
+                    log.error { "/prometheus failed writing metrics - ${it.localizedMessage}" }
+                }
+                .getOrDefault("")
+                .responseByContent()
         },
         NAIS_PRESTOP bind Method.GET to {
             preStopHook.inc()
@@ -221,19 +147,29 @@ fun naisAPI(): HttpHandler = routes(
             log.info { "Received PreStopHook from NAIS" }
             Response(Status.OK)
         }
-)
+    )
 
-fun naisAPIServer(port: Int): Http4kServer = naisAPI().asServer(Netty(port))
+    const val NAIS_URL = "http://localhost:"
+    const val NAIS_DEFAULT_PORT = 8080
 
-fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
-        naisAPIServer(port).let { srv ->
+    const val NAIS_ISALIVE = "/isAlive"
+    const val NAIS_ISREADY = "/isReady"
+    const val NAIS_METRICS = "/metrics"
+    const val NAIS_PRESTOP = "/stop"
+
+    private fun String.responseByContent(): Response =
+        if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
+
+    // Variant to use to run a job loop as base, having the api enabled only until job loop breaks:
+    fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
+        apiServer(port).let { srv ->
             try {
                 srv.start().use {
                     log.info { "NAIS DSL is up and running at port $port" }
                     runCatching(doSomething)
-                            .onFailure {
-                                log.error { "Failure during doSomething in enableNAISAPI - ${it.localizedMessage}" }
-                            }
+                        .onFailure {
+                            log.error { "Failure during doSomething in enableNAISAPI - ${it.localizedMessage}" }
+                        }
                 }
                 true
             } catch (e: Exception) {
@@ -244,3 +180,10 @@ fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
                 log.info { "NAIS DSL is stopped at port $port" }
             }
         }
+}
+
+internal val preStopHook: Gauge = Gauge
+        .build()
+        .name("pre_stop__hook_gauge")
+        .help("No. of preStopHook activations since last restart")
+        .register()

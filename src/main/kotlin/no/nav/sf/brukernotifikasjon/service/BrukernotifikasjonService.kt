@@ -1,4 +1,4 @@
-package no.nav.sf.brukernotifikasjon
+package no.nav.sf.brukernotifikasjon.service
 
 import no.nav.brukernotifikasjon.schemas.builders.NokkelInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
