@@ -54,7 +54,7 @@ object Application {
     fun api(): HttpHandler = routes(
         "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
-            log.info { "innboks called with body ${it.bodyString()}" }
+            log.info { "innboks called${if (devContext) " with body ${it.bodyString()}" else ""}" }
             if (containsValidToken(it)) {
                 try {
                     val innboksRequest = Application.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
@@ -86,7 +86,7 @@ object Application {
                         )
                         result.add(innboks)
                     }
-                    Response(Status.OK).body("Published $result")
+                    Response(Status.OK).body("Published ${result.count()} Innboks events ${if (devContext) result.toString() else ""}")
                 } catch (e: Exception) {
                     /*
                     val sw = StringWriter()
@@ -103,8 +103,7 @@ object Application {
             }
         },
         "/done" bind Method.POST to {
-            // workMetrics.requestsDone.inc()
-            log.info { "done called with body ${it.bodyString()}" }
+            log.info { "done called${if (devContext) " with body ${it.bodyString()}" else ""}" }
             if (containsValidToken(it)) {
                 try {
                     val doneRequest = Application.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
@@ -116,7 +115,7 @@ object Application {
                         Application.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                         result.add(done)
                     }
-                    Response(Status.OK).body("Published $result")
+                    Response(Status.OK).body("Published ${result.count()} Done events ${if (devContext) result.toString() else ""}")
                 } catch (e: Exception) {
                     log.error { e }
                     Response(Status.EXPECTATION_FAILED)
@@ -156,6 +155,8 @@ object Application {
     const val NAIS_ISREADY = "/isReady"
     const val NAIS_METRICS = "/metrics"
     const val NAIS_PRESTOP = "/stop"
+
+    val devContext: Boolean = System.getenv("SF_INSTANCE") == "PREPROD"
 
     private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)

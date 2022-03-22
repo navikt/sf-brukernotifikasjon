@@ -34,10 +34,7 @@ spec:
       memory: 512Mi
   ingresses:
     - "https://sf-brukernotifikasjon.nav.no"
-  envFrom:
-    - secret: sf-brukernotifikasjon
-  filesFrom:
-    - secret: sf-brukernotifikasjon
+    - "https://sf-brukernotifikasjon.intern.nav.no"
   azure:
     application:
       enabled: true
@@ -47,6 +44,8 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: prod-external
+  kafka:
+    pool: nav-prod
   env:
     - name: KAFKA_CLIENTID
       value: sf-brukernotifikasjon
