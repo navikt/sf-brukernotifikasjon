@@ -1,7 +1,6 @@
 package no.nav.sf.brukernotifikasjon
 
 import com.google.gson.Gson
-import io.prometheus.client.Gauge
 import io.prometheus.client.exporter.common.TextFormat
 import java.io.StringWriter
 import java.net.URL
@@ -52,6 +51,7 @@ object Application {
     fun api(): HttpHandler = routes(
         // "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
+            metrics.requestsInnboks.inc()
             log.info { "innboks called${if (devContext) " with body ${it.bodyString()}" else ""}" }
             if (containsValidToken(it)) {
                 try {
@@ -93,14 +93,17 @@ object Application {
                     val error = sw.toString()
                      */
                     log.error { e.toString() }
+                    metrics.apiIssues.inc()
                     Response(Status.EXPECTATION_FAILED).body(e.toString())
                 }
             } else {
+                metrics.apiIssues.inc()
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
             }
         },
         "/done" bind Method.POST to {
+            metrics.requestsDone.inc()
             log.info { "done called${if (devContext) " with body ${it.bodyString()}" else ""}" }
             if (containsValidToken(it)) {
                 try {
@@ -115,10 +118,12 @@ object Application {
                     }
                     Response(Status.OK).body("Published ${result.count()} Done events ${if (devContext) result.toString() else ""}")
                 } catch (e: Exception) {
+                    metrics.apiIssues.inc()
                     log.error { e }
                     Response(Status.EXPECTATION_FAILED)
                 }
             } else {
+                metrics.apiIssues.inc()
                 log.info { "Sf-brukernotifikasjon api call denied - missing valid token" }
                 Response(Status.UNAUTHORIZED)
             }
@@ -139,7 +144,7 @@ object Application {
                 .responseByContent()
         },
         NAIS_PRESTOP bind Method.GET to {
-            preStopHook.inc()
+            metrics.preStopHook.inc()
             PrestopHook.activate()
             log.info { "Received PreStopHook from NAIS" }
             Response(Status.OK)
@@ -180,9 +185,3 @@ object Application {
             }
         }
 }
-
-internal val preStopHook: Gauge = Gauge
-        .build()
-        .name("pre_stop__hook_gauge")
-        .help("No. of preStopHook activations since last restart")
-        .register()
