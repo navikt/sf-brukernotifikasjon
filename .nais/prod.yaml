@@ -34,7 +34,7 @@ spec:
       memory: 512Mi
   ingresses:
     - "https://sf-brukernotifikasjon.nav.no"
-    - "https://sf-brukernotifikasjon.intern.nav.no"
+    - "https://sf-brukernotifikasjon-v2.intern.nav.no"
   azure:
     application:
       enabled: true
