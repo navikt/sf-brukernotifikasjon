@@ -50,7 +50,7 @@ data class WMetrics(
     val noOfConsumedEvents: Gauge = Gauge
             .build()
             .name("kafka_consumed_event_gauge")
-            .help("No. of consumed activity events from kafka since last work session")
+            .help("No.  of consumed activity events from kafka since last work session")
             .register(),
     val noOfPostedEvents: Gauge = Gauge
             .build()
