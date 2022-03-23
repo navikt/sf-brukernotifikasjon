@@ -52,7 +52,7 @@ object Application {
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
     fun api(): HttpHandler = routes(
-        "/static" bind static(Classpath("/static")),
+        // "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             log.info { "innboks called${if (devContext) " with body ${it.bodyString()}" else ""}" }
             if (containsValidToken(it)) {
