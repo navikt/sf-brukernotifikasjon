@@ -61,7 +61,7 @@ spec:
     - name: KAFKA_TOPIC_DONE
       value: 'min-side.aapen-brukernotifikasjon-done-v1'
     - name: KAFKA_TOPIC_INNBOKS
-      value: 'min-side.aapen-brukernotifikasjon-nyInnboks-v1'
+      value: 'min-side.aapen-brukernotifikasjon-innboks-v1'
     - name: MS_BETWEEN_WORK
       value: '240000'
     - name: SF_INSTANCE

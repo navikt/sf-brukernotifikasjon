@@ -84,6 +84,7 @@ object Application {
                         )
                         result.add(innboks)
                     }
+                    log.info("Published ${result.count()} Innboks events")
                     Response(Status.OK).body("Published ${result.count()} Innboks events ${if (devContext) result.toString() else ""}")
                 } catch (e: Exception) {
                     /*
