@@ -49,6 +49,8 @@ spec:
         - application: salesforce
           namespace: teamcrm
           cluster: dev-external
+        - application: saas-proxy
+          namespace: teamcrm
   kafka:
     pool: nav-dev
   env:
