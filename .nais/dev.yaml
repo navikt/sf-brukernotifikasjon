@@ -28,10 +28,10 @@ spec:
   resources:
     limits:
       cpu: 1000m
-      memory: 1024Mi
+      memory: 2048Mi
     requests:
       cpu: 100m
-      memory: 512Mi
+      memory: 1024Mi
   ingresses:
     - "https://sf-brukernotifikasjon-v2.ekstern.dev.nav.no"
     - "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
@@ -64,15 +64,5 @@ spec:
       value: 'min-side.aapen-brukernotifikasjon-done-v1'
     - name: KAFKA_TOPIC_INNBOKS
       value: 'min-side.aapen-brukernotifikasjon-innboks-v1'
-    - name: MS_BETWEEN_WORK
-      value: '240000'
     - name: SF_INSTANCE
       value: PREPROD
-    - name: SF_TOKENHOST
-      value: 'https://test.salesforce.com'
-    - name: SF_VERSION
-      value: 'v48.0'
-    - name: VAULT_INSTANCE
-      value: GCP
-    - name: MS_BETWEEN_WORK
-      value: "6000000"
