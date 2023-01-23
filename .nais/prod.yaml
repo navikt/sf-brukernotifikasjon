@@ -6,9 +6,7 @@ metadata:
   labels:
     team: teamnks
 spec:
-  webproxy: true
   image: {{ image }}
-  port: 8080
   replicas:
     min: 2
     max: 2
