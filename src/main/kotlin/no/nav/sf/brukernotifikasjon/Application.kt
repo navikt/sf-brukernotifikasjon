@@ -15,7 +15,6 @@ import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.token.TokenValidation.containsValidToken
-import no.nav.sf.library.AnEnvironment
 import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
 import org.http4k.core.HttpHandler
@@ -28,17 +27,12 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 
-private const val EV_bootstrapWaitTime = "MS_BETWEEN_WORK" // default to 10 minutes
-private val bootstrapWaitTime = AnEnvironment.getEnvOrDefault(EV_bootstrapWaitTime, "60000").toLong()
-
-private val log = KotlinLogging.logger { }
-
 object Application {
-    val gson = Gson()
+    private val gson = Gson()
 
     private val log = KotlinLogging.logger { }
 
-    val brukernotifikasjonService = BrukernotifikasjonService()
+    private val brukernotifikasjonService = BrukernotifikasjonService()
 
     fun start() {
         log.info { "Starting" }
@@ -87,12 +81,6 @@ object Application {
                     log.info("Published ${result.count()} Innboks events")
                     Response(Status.OK).body("Published ${result.count()} Innboks events ${if (devContext) result.toString() else ""}")
                 } catch (e: Exception) {
-                    /*
-                    val sw = StringWriter()
-                    val pw = PrintWriter(sw)
-                    e.printStackTrace(pw)
-                    val error = sw.toString()
-                     */
                     log.error { e.toString() }
                     metrics.apiIssues.inc()
                     Response(Status.EXPECTATION_FAILED).body(e.toString())
@@ -164,25 +152,4 @@ object Application {
 
     private fun String.responseByContent(): Response =
         if (this.isNotEmpty()) Response(Status.OK).body(this) else Response(Status.NO_CONTENT)
-
-    // Variant to use to run a job loop as base, having the api enabled only until job loop breaks:
-    fun enableAPI(port: Int = NAIS_DEFAULT_PORT, doSomething: () -> Unit): Boolean =
-        apiServer(port).let { srv ->
-            try {
-                srv.start().use {
-                    log.info { "NAIS DSL is up and running at port $port" }
-                    runCatching(doSomething)
-                        .onFailure {
-                            log.error { "Failure during doSomething in enableNAISAPI - ${it.localizedMessage}" }
-                        }
-                }
-                true
-            } catch (e: Exception) {
-                log.error { "Failure during enable/disable NAIS api for port $port - ${e.localizedMessage}" }
-                false
-            } finally {
-                srv.close()
-                log.info { "NAIS DSL is stopped at port $port" }
-            }
-        }
 }
