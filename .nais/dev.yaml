@@ -32,7 +32,7 @@ spec:
       memory: 1024Mi
   ingresses:
     - "https://sf-brukernotifikasjon-v2.ekstern.dev.nav.no"
-    - "https://sf-brukernotifikasjon-v2.dev.intern.nav.no"
+    - "https://sf-brukernotifikasjon-v2.intern.dev.nav.no"
   envFrom:
     - secret: sf-brukernotifikasjon
   filesFrom:
