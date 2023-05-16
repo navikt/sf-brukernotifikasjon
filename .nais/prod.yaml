@@ -25,11 +25,10 @@ spec:
     path: /metrics
   resources:
     limits:
-      cpu: 1000m
-      memory: 2048Mi
+      memory: 2Gi
     requests:
-      cpu: 100m
-      memory: 1024Mi
+      cpu: 10m
+      memory: 512Mi
   ingresses:
     - "https://sf-brukernotifikasjon.nav.no"
     - "https://sf-brukernotifikasjon-v2.intern.nav.no"
