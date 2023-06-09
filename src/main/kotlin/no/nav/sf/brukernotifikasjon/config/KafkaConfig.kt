@@ -2,12 +2,12 @@ package no.nav.sf.brukernotifikasjon.config
 
 import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
-import java.util.Properties
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
+import java.util.Properties
 
 object KafkaConfig {
     fun producerProps(env: Environment, type: Eventtype): Properties {

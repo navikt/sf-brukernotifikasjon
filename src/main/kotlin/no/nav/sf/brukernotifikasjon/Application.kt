@@ -2,11 +2,6 @@ package no.nav.sf.brukernotifikasjon
 
 import com.google.gson.Gson
 import io.prometheus.client.exporter.common.TextFormat
-import java.io.StringWriter
-import java.net.URL
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.builders.DoneInputBuilder
 import no.nav.brukernotifikasjon.schemas.builders.InnboksInputBuilder
@@ -26,6 +21,11 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.Netty
 import org.http4k.server.asServer
+import java.io.StringWriter
+import java.net.URL
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 object Application {
     private val gson = Gson()
