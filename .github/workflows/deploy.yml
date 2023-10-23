@@ -62,7 +62,6 @@ jobs:
           RESOURCE: .nais/dev.yaml
           IMAGE: ${{ steps.docker-push.outputs.image }}
       - name: Deploy to NAIS prod gcp
-        needs: build
         if: github.ref == 'refs/heads/master'
         uses: nais/deploy/actions/deploy@v1
         env:
