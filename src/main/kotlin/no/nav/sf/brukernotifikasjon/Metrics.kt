@@ -23,6 +23,11 @@ class Metrics {
         .name("api_issues")
         .help("api_issues")
         .register()
+    val randomNumber: Gauge = Gauge
+        .build()
+        .name("random_number")
+        .help("random_number")
+        .register()
 }
 
 val metrics = Metrics()
