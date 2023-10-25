@@ -36,7 +36,7 @@ object Application {
 
     fun start() {
         log.info { "Starting" }
-        metrics.randomNumber.set(4.0) // guaranteed to be random
+        metrics.randomNumber.inc() // no longer guaranteed to be random
         apiServer(NAIS_DEFAULT_PORT).start()
         log.info { "Finished!" }
     }
