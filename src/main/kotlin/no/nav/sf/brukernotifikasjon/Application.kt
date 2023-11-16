@@ -14,6 +14,7 @@ import no.nav.sf.library.Metrics
 import no.nav.sf.library.PrestopHook
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
+import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
 import org.http4k.routing.bind
@@ -42,12 +43,17 @@ object Application {
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    fun api(): HttpHandler = routes(
+    fun api(
+        containsValidTokenFn: (Request) -> Boolean = ::containsValidToken,
+        sendInnboksFn: (String, String, String, InnboksInput) -> Unit = brukernotifikasjonService::sendInnboks,
+        sendDoneFn: (String, String, String, DoneInput) -> Unit = brukernotifikasjonService::sendDone
+    ): HttpHandler = routes(
+
         // "/static" bind static(Classpath("/static")),
         "/innboks" bind Method.POST to {
             metrics.requestsInnboks.inc()
             log.info { "innboks called${if (devContext) " with body ${it.bodyString()}" else ""}" }
-            if (containsValidToken(it)) {
+            if (containsValidTokenFn(it)) {
                 try {
                     val innboksRequest = Application.gson.fromJson(it.bodyString(), Array<InnboksRequest>::class.java)
                     val result: MutableList<InnboksInput> = mutableListOf()
@@ -70,7 +76,7 @@ object Application {
                             )
                         }
                         val innboks = innboksbuilder.build()
-                        Application.brukernotifikasjonService.sendInnboks(
+                        sendInnboksFn(
                             it.eventId,
                             it.grupperingsId,
                             it.fodselsnummer,
@@ -94,7 +100,7 @@ object Application {
         "/done" bind Method.POST to {
             metrics.requestsDone.inc()
             log.info { "done called${if (devContext) " with body ${it.bodyString()}" else ""}" }
-            if (containsValidToken(it)) {
+            if (containsValidTokenFn(it)) {
                 try {
                     val doneRequest = Application.gson.fromJson(it.bodyString(), Array<DoneRequest>::class.java)
                     val result: MutableList<DoneInput> = mutableListOf()
@@ -102,7 +108,7 @@ object Application {
                         val done = DoneInputBuilder()
                             .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
                             .build()
-                        Application.brukernotifikasjonService.sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
+                        sendDoneFn(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                         result.add(done)
                     }
                     Response(Status.OK).body("Published ${result.count()} Done events ${if (devContext) result.toString() else ""}")
