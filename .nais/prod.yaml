@@ -6,7 +6,7 @@ metadata:
   labels:
     team: teamnks
 spec:
-  image: {{ image }}
+  image: '{{ image }}'
   replicas:
     min: 2
     max: 2
