@@ -103,10 +103,15 @@ dependencies {
 
     implementation "io.prometheus:simpleclient_common:$prometheus_version"
     implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
 }
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 sourceSets {
