@@ -1,6 +1,11 @@
 package no.nav.sf.brukernotifikasjon
 
-data class DoneRequest(val eventId: String, val tidspunkt: String, val fodselsnummer: String, val grupperingsId: String)
+data class DoneRequest(
+    val eventId: String,
+    val tidspunkt: String,
+    val fodselsnummer: String,
+    val grupperingsId: String
+)
 
 data class InnboksRequest(
     val eventId: String,

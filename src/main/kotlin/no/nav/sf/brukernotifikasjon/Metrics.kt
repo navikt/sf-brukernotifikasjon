@@ -1,28 +1,49 @@
 package no.nav.sf.brukernotifikasjon
 
+import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Gauge
+import io.prometheus.client.exporter.common.TextFormat
+import io.prometheus.client.hotspot.DefaultExports
+import mu.KotlinLogging
+import org.http4k.core.Request
+import org.http4k.core.Response
+import org.http4k.core.Status
+import java.io.StringWriter
 
-class Metrics {
-    val preStopHook: Gauge = Gauge
-        .build()
-        .name("pre_stop__hook_gauge")
-        .help("No. of preStopHook activations since last restart")
-        .register()
-    val requestsDone: Gauge = Gauge
-        .build()
-        .name("request_done")
-        .help("request_done")
-        .register()
-    val requestsInnboks: Gauge = Gauge
-        .build()
-        .name("request_innboks")
-        .help("request_innboks")
-        .register()
-    val apiIssues: Gauge = Gauge
-        .build()
-        .name("api_issues")
-        .help("api_issues")
-        .register()
+object Metrics {
+
+    private val log = KotlinLogging.logger { }
+
+    val requestsDone = registerGauge("request_done")
+    val requestsInnboks = registerGauge("request_innboks")
+    val apiIssues = registerGauge("api_issues")
+
+    private val metricsAsText: String get() {
+        val str = StringWriter()
+        TextFormat.write004(str, CollectorRegistry.defaultRegistry.metricFamilySamples())
+        return str.toString()
+    }
+
+    val metricsHandler = { _: Request ->
+        try {
+            val result = metricsAsText
+            if (result.isEmpty()) {
+                Response(Status.NO_CONTENT)
+            } else {
+                Response(Status.OK).body(result)
+            }
+        } catch (e: Exception) {
+            log.error { "Failed writing metrics - ${e.message}" }
+            Response(Status.INTERNAL_SERVER_ERROR)
+        }
+    }
+
+    private fun registerGauge(name: String): Gauge {
+        return Gauge.build().name(name).help(name).register()
+    }
+
+    init {
+        DefaultExports.initialize()
+        log.info { "Prometheus metrics are ready" }
+    }
 }
-
-val metrics = Metrics()
