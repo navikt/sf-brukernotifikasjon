@@ -108,6 +108,7 @@ class BrukernotifikasjonService(
                 sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                 result.add(done)
             }
+            log.info("Published ${result.count()} Done events")
             Response(Status.OK).body("Published ${result.count()} Done events ${if (devContext) result.toString() else ""}")
         } catch (e: Exception) {
             Metrics.apiIssues.inc()
