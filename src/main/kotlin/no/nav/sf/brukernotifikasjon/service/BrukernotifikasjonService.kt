@@ -131,4 +131,18 @@ class BrukernotifikasjonService(
             .withNamespace(naisNamespace)
             .withAppnavn(naisAppName)
             .build()
+
+    init {
+        Runtime.getRuntime()
+            .addShutdownHook(
+                object : Thread() {
+                    private val log = KotlinLogging.logger { }
+                    override fun run() {
+                        log.info { "Trigger shutdown hook - perform flushes" }
+                        kafkaProducerInnboks.flush()
+                        kafkaProducerDone.flush()
+                    }
+                }
+            )
+    }
 }
