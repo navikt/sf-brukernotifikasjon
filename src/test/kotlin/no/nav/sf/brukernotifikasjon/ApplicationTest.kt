@@ -35,8 +35,8 @@ class ApplicationTest {
     fun setup() {
         every { mockTokenValidator.firstValidToken(any()) } returns mockTokenOptional
         every { mockTokenOptional.isPresent } returns true
-        every { mockKafkaProducerInnboks.flush() } returns Unit
-        every { mockKafkaProducerDone.flush() } returns Unit
+        every { mockKafkaProducerInnboks.flushAndClose() } returns Unit
+        every { mockKafkaProducerDone.flushAndClose() } returns Unit
     }
 
     private val application = Application(

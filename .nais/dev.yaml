@@ -12,14 +12,11 @@ spec:
     max: 1
   liveness:
     path: /internal/isAlive
-    initialDelay: 5
-    periodSeconds: 5
-    failureThreshold: 30
   readiness:
     path: /internal/isReady
-    initialDelay: 5
     periodSeconds: 5
-    failureThreshold: 30
+    failureThreshold: 5
+  terminationGracePeriodSeconds: 40
   prometheus:
     enabled: true
     path: /internal/metrics

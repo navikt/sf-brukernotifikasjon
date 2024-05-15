@@ -18,5 +18,8 @@ class KafkaProducerWrapper<K, V>(
         }
     }
 
-    fun flush() = kafkaProducer.flush()
+    fun flushAndClose() {
+        kafkaProducer.flush()
+        kafkaProducer.close()
+    }
 }

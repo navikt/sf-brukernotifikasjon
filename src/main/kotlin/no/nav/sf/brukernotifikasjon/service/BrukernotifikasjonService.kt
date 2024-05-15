@@ -20,6 +20,7 @@ import no.nav.sf.brukernotifikasjon.config_KAFKA_TOPIC_INNBOKS
 import no.nav.sf.brukernotifikasjon.env
 import no.nav.sf.brukernotifikasjon.env_NAIS_APP_NAME
 import no.nav.sf.brukernotifikasjon.env_NAIS_NAMESPACE
+import no.nav.sf.brukernotifikasjon.shuttingDown
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.http4k.core.HttpHandler
 import org.http4k.core.Response
@@ -138,9 +139,11 @@ class BrukernotifikasjonService(
                 object : Thread() {
                     private val log = KotlinLogging.logger { }
                     override fun run() {
-                        log.info { "Trigger shutdown hook - perform flushes" }
-                        kafkaProducerInnboks.flush()
-                        kafkaProducerDone.flush()
+                        log.info { "Trigger shutdown hook - tell kubernetes that the app is not ready, wait for it to realize and flush and close producers" }
+                        shuttingDown = true
+                        sleep(25000) // Sleep for 25 seconds (readiness periodSeconds x failureThreshold)
+                        kafkaProducerInnboks.flushAndClose()
+                        kafkaProducerDone.flushAndClose()
                     }
                 }
             )

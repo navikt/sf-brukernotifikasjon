@@ -16,6 +16,8 @@ import org.http4k.server.ApacheServer
 import org.http4k.server.Http4kServer
 import org.http4k.server.asServer
 
+@Volatile var shuttingDown: Boolean = false
+
 class Application(
     private val tokenValidator: TokenValidator = DefaultTokenValidator(),
     private val brukernotifikasjonService: BrukernotifikasjonService = BrukernotifikasjonService(),
@@ -31,11 +33,19 @@ class Application(
 
     fun api(): HttpHandler = routes(
         "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
-        "/internal/isReady" bind Method.GET to { Response(Status.OK) },
+        "/internal/isReady" bind Method.GET to isReadyHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
         "/innboks" authbind Method.POST to brukernotifikasjonService.innboksHandler,
         "/done" authbind Method.POST to brukernotifikasjonService.doneHandler,
     )
+
+    private val isReadyHandler: HttpHandler = {
+        if (shuttingDown) {
+            Response(Status.SERVICE_UNAVAILABLE).body("Application is shutting down")
+        } else {
+            Response(Status.OK)
+        }
+    }
 
     /**
      * authbind: a variant of bind that takes care of authentication with use of tokenValidator
