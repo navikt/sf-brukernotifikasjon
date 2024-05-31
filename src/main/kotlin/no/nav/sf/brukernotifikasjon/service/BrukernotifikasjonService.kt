@@ -139,9 +139,10 @@ class BrukernotifikasjonService(
                 object : Thread() {
                     private val log = KotlinLogging.logger { }
                     override fun run() {
-                        log.info { "Trigger shutdown hook - tell kubernetes that the app is not ready, wait for it to realize and flush and close producers" }
+                        log.info { "Trigger shutdown hook" }
                         shuttingDown = true
                         sleep(25000) // Sleep for 25 seconds (readiness periodSeconds x failureThreshold)
+                        log.info { "Flush and close producers" }
                         kafkaProducerInnboks.flushAndClose()
                         kafkaProducerDone.flushAndClose()
                     }
