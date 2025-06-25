@@ -22,19 +22,17 @@ import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.Optional
 
 class ApplicationTest {
     private val mockTokenValidator = mockk<TokenValidator>()
-    private val mockTokenOptional = mockk<Optional<JwtToken>>()
+    private val mockToken = mockk<JwtToken>()
 
     private val mockKafkaProducerDone = mockk<KafkaProducerWrapper<NokkelInput, DoneInput>>()
     private val mockKafkaProducerInnboks = mockk<KafkaProducerWrapper<NokkelInput, InnboksInput>>()
 
     @BeforeEach
     fun setup() {
-        every { mockTokenValidator.firstValidToken(any()) } returns mockTokenOptional
-        every { mockTokenOptional.isPresent } returns true
+        every { mockTokenValidator.firstValidToken(any()) } returns mockToken
         every { mockKafkaProducerInnboks.flushAndClose() } returns Unit
         every { mockKafkaProducerDone.flushAndClose() } returns Unit
     }
@@ -72,8 +70,10 @@ class ApplicationTest {
     @Test
     fun `POST innboks with invalid token should answer UNAUTHORIZED`() {
         val payload = createTestInnboksRequest()
+
+        every { mockTokenValidator.firstValidToken(any()) } returns null
+
         every { mockKafkaProducerInnboks.sendEvent(any(), any()) } returns Unit
-        every { mockTokenOptional.isPresent } returns false
 
         val response = application.api().invoke(Request(POST, "/innboks").body(payload))
 
@@ -146,8 +146,10 @@ class ApplicationTest {
     @Test
     fun `POST done with invalid token should answer UNAUTHORIZED`() {
         val payload = createTestDoneRequest()
+
+        every { mockTokenValidator.firstValidToken(any()) } returns null
+
         every { mockKafkaProducerDone.sendEvent(any(), any()) } returns Unit
-        every { mockTokenOptional.isPresent } returns false
 
         val response = application.api().invoke(Request(POST, "/done").body(payload))
 

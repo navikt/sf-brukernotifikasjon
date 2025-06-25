@@ -2,8 +2,8 @@ package no.nav.sf.brukernotifikasjon
 
 import mu.KotlinLogging
 import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
+import no.nav.sf.brukernotifikasjon.token.DefaultTokenValidator
 import no.nav.sf.brukernotifikasjon.token.TokenValidator
-import no.nav.sf.henvendelse.api.proxy.token.DefaultTokenValidator
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Response
@@ -12,8 +12,8 @@ import org.http4k.routing.PathMethod
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import org.http4k.server.ApacheServer
 import org.http4k.server.Http4kServer
+import org.http4k.server.Netty
 import org.http4k.server.asServer
 
 @Volatile var shuttingDown: Boolean = false
@@ -29,7 +29,7 @@ class Application(
         apiServer(8080).start()
     }
 
-    fun apiServer(port: Int): Http4kServer = api().asServer(ApacheServer(port))
+    fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
     fun api(): HttpHandler = routes(
         "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
@@ -56,7 +56,7 @@ class Application(
         infix fun to(action: HttpHandler): RoutingHttpHandler =
             PathMethod(path, method) to { request ->
                 val token = tokenValidator.firstValidToken(request)
-                if (token.isPresent) {
+                if (token != null) {
                     action(request)
                 } else {
                     Metrics.apiIssues.inc()
