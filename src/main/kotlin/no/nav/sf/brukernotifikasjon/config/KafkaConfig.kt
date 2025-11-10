@@ -24,8 +24,8 @@ object KafkaConfig {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env(env_KAFKA_BROKERS))
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env(env_KAFKA_SCHEMA_REGISTRY))
             put(ProducerConfig.CLIENT_ID_CONFIG, env(env_NAIS_APP_NAME) + type.name)
-            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer")
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer")
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
@@ -44,3 +44,4 @@ object KafkaConfig {
         }
     }
 }
+ne

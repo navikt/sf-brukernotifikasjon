@@ -35,8 +35,7 @@ class Application(
         "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
         "/internal/isReady" bind Method.GET to isReadyHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
-        "/innboks" authbind Method.POST to brukernotifikasjonService.innboksHandler,
-        "/done" authbind Method.POST to brukernotifikasjonService.doneHandler,
+        "/varsel" authbind Method.POST to brukernotifikasjonService.opprettVarselHandler,
     )
 
     private val isReadyHandler: HttpHandler = {

@@ -89,6 +89,7 @@ dependencies {
     implementation "org.xerial.snappy:snappy-java:1.1.10.4" //Desired transient snappy to kafka-clients above
     implementation "org.apache.avro:avro:1.11.4" //Desired transient avro to serializer above
 //    implementation "com.nimbusds:nimbus-jose-jwt:9.37.2"
+    implementation "no.nav.tms.varsel:kotlin-builder:2.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
     testImplementation 'io.mockk:mockk:1.14.2'
