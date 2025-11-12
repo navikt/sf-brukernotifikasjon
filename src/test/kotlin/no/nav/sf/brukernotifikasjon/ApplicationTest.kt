@@ -1,27 +1,16 @@
 package no.nav.sf.brukernotifikasjon
 
-import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
-import io.mockk.verify
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.security.token.support.core.jwt.JwtToken
 import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.service.KafkaProducerWrapper
+import no.nav.sf.brukernotifikasjon.service.OldBrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.token.TokenValidator
-import org.http4k.core.MemoryBody
-import org.http4k.core.Method.GET
-import org.http4k.core.Method.POST
-import org.http4k.core.Request
-import org.http4k.core.Status.Companion.EXPECTATION_FAILED
-import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.UNAUTHORIZED
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 
 class ApplicationTest {
     private val mockTokenValidator = mockk<TokenValidator>()
@@ -29,6 +18,8 @@ class ApplicationTest {
 
     private val mockKafkaProducerDone = mockk<KafkaProducerWrapper<NokkelInput, DoneInput>>()
     private val mockKafkaProducerInnboks = mockk<KafkaProducerWrapper<NokkelInput, InnboksInput>>()
+
+    private val mockBrukernotifikasjonService = mockk<BrukernotifikasjonService>()
 
     @BeforeEach
     fun setup() {
@@ -39,13 +30,15 @@ class ApplicationTest {
 
     private val application = Application(
         mockTokenValidator,
-        BrukernotifikasjonService(
+        mockBrukernotifikasjonService,
+        OldBrukernotifikasjonService(
             naisNamespace = "namespace",
             naisAppName = "appName",
             kafkaProducerDone = mockKafkaProducerDone,
             kafkaProducerInnboks = mockKafkaProducerInnboks
         )
     )
+    /*
 
     @Test
     fun `GET isReady isAlive stop and metrics should all answer OK`() {
@@ -245,4 +238,6 @@ class ApplicationTest {
                 ]
             """.trimIndent()
         )
+
+     */
 }

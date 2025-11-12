@@ -16,6 +16,9 @@ object Metrics {
     // Gauge for counting API issues (e.g. unauthorized access, general errors)
     val apiIssues = registerGauge("api_issues")
 
+    val requestsDone = registerGauge("request_done") // TODO DEPRECATED
+    val requestsInnboks = registerGauge("request_innboks") // TODO DEPRECATED
+
     // Example: Add any future TMS-event related metrics here
     // val requestsVarsel = registerGauge("request_varsel")
 

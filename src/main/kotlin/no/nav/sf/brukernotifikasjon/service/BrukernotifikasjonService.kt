@@ -4,8 +4,8 @@ import com.google.gson.Gson
 import mu.KotlinLogging
 import no.nav.sf.brukernotifikasjon.OpprettVarselRequest
 import no.nav.sf.brukernotifikasjon.config.KafkaConfig
-import no.nav.sf.brukernotifikasjon.config_TMS_VARSEL_TOPIC
 import no.nav.sf.brukernotifikasjon.config_CONTEXT
+import no.nav.sf.brukernotifikasjon.config_TMS_VARSEL_TOPIC
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.http4k.core.HttpHandler

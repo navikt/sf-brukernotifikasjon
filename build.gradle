@@ -28,7 +28,6 @@ run {
 
 repositories {
     mavenCentral()
-//    jcenter()
 
     maven {
         url "https://packages.confluent.io/maven"
@@ -82,13 +81,8 @@ dependencies {
     implementation "io.prometheus:simpleclient_common:0.8.1"
     implementation "io.prometheus:simpleclient_hotspot:0.8.1"
 
-//    implementation "net.minidev:json-smart:2.4.9" //Desired transient json-smart to token-validation above
-//    implementation "org.apache.commons:commons-compress:1.26.0" //transient http4k-apache
-//    implementation "org.apache.httpcomponents:httpclient:4.5.13" //Desired transient httpclient to http4k-apache
-
     implementation "org.xerial.snappy:snappy-java:1.1.10.4" //Desired transient snappy to kafka-clients above
     implementation "org.apache.avro:avro:1.11.4" //Desired transient avro to serializer above
-//    implementation "com.nimbusds:nimbus-jose-jwt:9.37.2"
     implementation "no.nav.tms.varsel:kotlin-builder:2.1.1"
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
@@ -107,11 +101,6 @@ sourceSets {
     test.kotlin.srcDirs += 'src/test/kotlin'
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
-    kotlinOptions.jvmTarget = "21"
-}
-
-tasks.withType(JavaCompile) {
-    sourceCompatibility = "21"
-    targetCompatibility = "21"
+kotlin {
+    jvmToolchain(21)
 }

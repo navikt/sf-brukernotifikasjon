@@ -1,6 +1,8 @@
 package no.nav.sf.brukernotifikasjon.config
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
+import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.sf.brukernotifikasjon.env
 import no.nav.sf.brukernotifikasjon.env_KAFKA_BROKERS
 import no.nav.sf.brukernotifikasjon.env_KAFKA_CREDSTORE_PASSWORD
@@ -14,17 +16,16 @@ import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
-import org.apache.kafka.common.serialization.StringSerializer
 import java.util.Properties
 
-object KafkaConfig {
-    fun producerProps(): Properties {
+object OldKafkaConfig {
+    fun producerProps(type: Eventtype): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env(env_KAFKA_BROKERS))
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env(env_KAFKA_SCHEMA_REGISTRY))
-            put(ProducerConfig.CLIENT_ID_CONFIG, env(env_NAIS_APP_NAME) + "-varsel")
-            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+            put(ProducerConfig.CLIENT_ID_CONFIG, env(env_NAIS_APP_NAME) + type.name)
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")

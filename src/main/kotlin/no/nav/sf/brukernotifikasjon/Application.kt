@@ -2,6 +2,7 @@ package no.nav.sf.brukernotifikasjon
 
 import mu.KotlinLogging
 import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
+import no.nav.sf.brukernotifikasjon.service.OldBrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.token.DefaultTokenValidator
 import no.nav.sf.brukernotifikasjon.token.TokenValidator
 import org.http4k.core.HttpHandler
@@ -21,6 +22,7 @@ import org.http4k.server.asServer
 class Application(
     private val tokenValidator: TokenValidator = DefaultTokenValidator(),
     private val brukernotifikasjonService: BrukernotifikasjonService = BrukernotifikasjonService(),
+    private val oldBrukernotifikasjonService: OldBrukernotifikasjonService = OldBrukernotifikasjonService(), // TODO DEPRECATED
 ) {
     private val log = KotlinLogging.logger { }
 
@@ -36,6 +38,8 @@ class Application(
         "/internal/isReady" bind Method.GET to isReadyHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
         "/varsel" authbind Method.POST to brukernotifikasjonService.opprettVarselHandler,
+        "/innboks" authbind Method.POST to oldBrukernotifikasjonService.innboksHandler, // TODO DEPRECATED
+        "/done" authbind Method.POST to oldBrukernotifikasjonService.doneHandler, // TODO DEPRECATED
     )
 
     private val isReadyHandler: HttpHandler = {
