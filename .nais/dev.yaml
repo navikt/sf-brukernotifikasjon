@@ -51,13 +51,15 @@ spec:
   env:
     - name: KAFKA_CLIENTID
       value: sf-brukernotifikasjon
-    - name: KAFKA_TOPIC_NYBESKJED
+    - name: TMS_VARSEL_TOPIC
+      value: 'min-side.aapen-brukervarsel-v1'
+    - name: KAFKA_TOPIC_NYBESKJED #DEPRECATED
       value: 'min-side.aapen-brukernotifikasjon-nyBeskjed-v1'
-    - name: KAFKA_TOPIC_NYOPPGAVE
+    - name: KAFKA_TOPIC_NYOPPGAVE #DEPRECATED
       value: 'min-side.aapen-brukernotifikasjon-nyOppgave-v1'
-    - name: KAFKA_TOPIC_DONE
+    - name: KAFKA_TOPIC_DONE #DEPRECATED
       value: 'min-side.aapen-brukernotifikasjon-done-v1'
-    - name: KAFKA_TOPIC_INNBOKS
+    - name: KAFKA_TOPIC_INNBOKS #DEPRECATED
       value: 'min-side.aapen-brukernotifikasjon-innboks-v1'
     - name: CONTEXT
       value: "DEV"
