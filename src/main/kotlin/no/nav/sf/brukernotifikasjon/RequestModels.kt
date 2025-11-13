@@ -21,7 +21,6 @@ data class Produsent(
 )
 
 data class OpprettVarselRequest(
-    val event_name: String,
     val type: String,
     val varselId: String,
     val ident: String,
