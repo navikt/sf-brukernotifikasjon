@@ -30,7 +30,7 @@ data class OpprettVarselRequest(
     val tekster: List<Tekst>,
     val link: String,
     val sensitivitet: String,
-    val aktivFremTil: String,
+    val aktivFremTil: String?,
     val eksternVarsling: EksternVarsling,
     val produsent: Produsent
 )
