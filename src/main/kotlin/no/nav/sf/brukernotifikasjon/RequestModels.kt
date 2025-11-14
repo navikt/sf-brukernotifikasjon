@@ -1,3 +1,4 @@
+import com.google.gson.annotations.SerializedName
 package no.nav.sf.brukernotifikasjon
 
 data class Tekst(
@@ -21,6 +22,7 @@ data class Produsent(
 )
 
 data class OpprettVarselRequest(
+    @SerializedName("@event_name")
     val event_name: String,
     val type: String,
     val varselId: String,
