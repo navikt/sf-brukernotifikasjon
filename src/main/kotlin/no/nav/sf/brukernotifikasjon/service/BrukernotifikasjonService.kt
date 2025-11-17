@@ -22,6 +22,7 @@ class BrukernotifikasjonService(
 
     val opprettVarselHandler: HttpHandler = { request ->
         try {
+            log.info("Kall til Opprett Varsel motatt")
             val varselRequest = gson.fromJson(request.bodyString(), OpprettVarselRequest::class.java)
             val key = varselRequest.varselId
             val value = gson.toJson(varselRequest)
@@ -32,7 +33,7 @@ class BrukernotifikasjonService(
                 Response(Status.OK)
             }
         } catch (e: Exception) {
-            log.error(e) { "Failed to produce TMS varsel" }
+            log.error("Failed to produce TMS varsel, " + e.stackTraceToString())
             Response(Status.BAD_REQUEST)
         }
     }
