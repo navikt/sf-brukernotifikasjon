@@ -37,7 +37,7 @@ class Application(
         "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
         "/internal/isReady" bind Method.GET to isReadyHandler,
         "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
-        "/varsel" authbind Method.POST to brukernotifikasjonService.opprettVarselHandler,
+        "/varsel" bind Method.POST to brukernotifikasjonService.opprettVarselHandler,
         "/innboks" authbind Method.POST to oldBrukernotifikasjonService.innboksHandler, // TODO DEPRECATED
         "/done" authbind Method.POST to oldBrukernotifikasjonService.doneHandler, // TODO DEPRECATED
     )
