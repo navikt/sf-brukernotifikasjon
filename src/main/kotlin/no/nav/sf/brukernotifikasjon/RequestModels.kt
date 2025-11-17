@@ -1,5 +1,7 @@
 package no.nav.sf.brukernotifikasjon
 
+import com.google.gson.annotations.SerializedName
+
 data class Tekst(
     val spraakkode: String,
     val tekst: String,
@@ -21,6 +23,7 @@ data class Produsent(
 )
 
 data class OpprettVarselRequest(
+    @SerializedName("@event_name")
     val event_name: String,
     val type: String,
     val varselId: String,
@@ -28,7 +31,7 @@ data class OpprettVarselRequest(
     val tekster: List<Tekst>,
     val link: String,
     val sensitivitet: String,
-    val aktivFremTil: String,
+    val aktivFremTil: String?,
     val eksternVarsling: EksternVarsling,
     val produsent: Produsent
 )
