@@ -1,5 +1,6 @@
-import com.google.gson.annotations.SerializedName
 package no.nav.sf.brukernotifikasjon
+
+import com.google.gson.annotations.SerializedName
 
 data class Tekst(
     val spraakkode: String,
