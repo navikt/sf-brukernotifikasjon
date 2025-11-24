@@ -24,6 +24,7 @@ class BrukernotifikasjonService(
 
     val opprettVarselHandler: HttpHandler = { request ->
         try {
+            log.info("Kall til Opprett Varsel motatt")
             val varselRequest = gson.fromJson(request.bodyString(), OpprettVarselRequest::class.java)
             val key = varselRequest.varselId
             val value = gson.toJson(varselRequest)
@@ -34,13 +35,14 @@ class BrukernotifikasjonService(
                 Response(Status.OK)
             }
         } catch (e: Exception) {
-            log.error(e) { "Failed to produce TMS varsel" }
+            log.error("Failed to produce TMS varsel, " + e.stackTraceToString())
             Response(Status.BAD_REQUEST)
         }
     }
 
     val inaktiverVarselHandler: HttpHandler = { request ->
         try {
+            log.info("Kall til Inaktiver Varsel motatt")
             val inaktiverRequest = gson.fromJson(request.bodyString(), InaktiverVarselRequest::class.java)
             val key = inaktiverRequest.varselId
             val value = gson.toJson(inaktiverRequest)
@@ -51,7 +53,7 @@ class BrukernotifikasjonService(
                 Response(Status.OK)
             }
         } catch (e: Exception) {
-            log.error(e) { "Failed to produce TMS inaktiver varsel" }
+            log.error("Failed to produce TMS inaktiver varsel, " + e.stackTraceToString())
             Response(Status.BAD_REQUEST)
         }
     }
