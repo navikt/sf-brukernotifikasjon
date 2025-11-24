@@ -62,7 +62,7 @@ class BrukernotifikasjonService(
     init {
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
-                log.info ( "Shutting down. Flushing and closing Kafka producer." )
+                log.info("Shutting down. Flushing and closing Kafka producer.")
                 producer.flush()
                 producer.close()
             }
