@@ -3,6 +3,7 @@ package no.nav.sf.brukernotifikasjon.service
 import com.google.gson.Gson
 import mu.KotlinLogging
 import no.nav.sf.brukernotifikasjon.OpprettVarselRequest
+import no.nav.sf.brukernotifikasjon.InaktiverVarselRequest
 import no.nav.sf.brukernotifikasjon.config.KafkaConfig
 import no.nav.sf.brukernotifikasjon.config_CONTEXT
 import no.nav.sf.brukernotifikasjon.config_TMS_VARSEL_TOPIC
@@ -16,7 +17,7 @@ import org.http4k.core.Status
 class BrukernotifikasjonService(
     private val gson: Gson = Gson(),
     private val producer: KafkaProducer<String, String> = KafkaProducer(KafkaConfig.producerProps()),
-    private val varselTopic: String = System.getenv(config_TMS_VARSEL_TOPIC)
+    private val varselTopic: String = System.getenv(config_TMS_VARSEL_TOPIC),
     private val inaktiverTopic: String = System.getenv(config_TMS_INAKTIVER_TOPIC)
 ) {
     private val log = KotlinLogging.logger {}
@@ -24,7 +25,7 @@ class BrukernotifikasjonService(
 
     val opprettVarselHandler: HttpHandler = { request ->
         try {
-            log.info("Kall til Opprett Varsel motatt")
+            log.info("Kall til Opprett Varsel mottatt")
             val varselRequest = gson.fromJson(request.bodyString(), OpprettVarselRequest::class.java)
             val key = varselRequest.varselId
             val value = gson.toJson(varselRequest)
@@ -42,7 +43,7 @@ class BrukernotifikasjonService(
 
     val inaktiverVarselHandler: HttpHandler = { request ->
         try {
-            log.info("Kall til Inaktiver Varsel motatt")
+            log.info("Kall til Inaktiver Varsel mottatt")
             val inaktiverRequest = gson.fromJson(request.bodyString(), InaktiverVarselRequest::class.java)
             val key = inaktiverRequest.varselId
             val value = gson.toJson(inaktiverRequest)
@@ -61,7 +62,7 @@ class BrukernotifikasjonService(
     init {
         Runtime.getRuntime().addShutdownHook(object : Thread() {
             override fun run() {
-                log.info { "Shutting down. Flushing and closing Kafka producer." }
+                log.info ( "Shutting down. Flushing and closing Kafka producer." )
                 producer.flush()
                 producer.close()
             }
