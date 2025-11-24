@@ -14,6 +14,7 @@ package no.nav.sf.brukernotifikasjon
  * - secret: Denotes an environment variable loaded from a Kubernetes secret.
  */
 const val config_TMS_VARSEL_TOPIC = "TMS_VARSEL_TOPIC"
+const val config_TMS_INAKTIVER_TOPIC = "TMS_INAKTIVER_TOPIC"
 const val config_KAFKA_TOPIC_DONE = "KAFKA_TOPIC_DONE" // TODO DEPRECATED
 const val config_KAFKA_TOPIC_INNBOKS = "KAFKA_TOPIC_INNBOKS" // TODO DEPRECATED
 const val config_CONTEXT = "CONTEXT"

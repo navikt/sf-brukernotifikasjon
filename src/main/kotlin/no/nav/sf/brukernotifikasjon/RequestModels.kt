@@ -36,6 +36,13 @@ data class OpprettVarselRequest(
     val produsent: Produsent
 )
 
+data class InaktiverVarselRequest(
+    @SerializedName("@event_name")
+    val event_name: String,
+    val varselId: String,
+    val produsent: Produsent
+)
+
 // TODO DEPRECATED MODELS:
 data class DoneRequest(
     val eventId: String,

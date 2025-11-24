@@ -53,6 +53,8 @@ spec:
       value: sf-brukernotifikasjon
     - name: TMS_VARSEL_TOPIC
       value: 'min-side.aapen-brukervarsel-v1'
+    - name: TMS_INAKTIVER_TOPIC
+      value: 'min-side.aapen-brukervarsel-v1'
     - name: KAFKA_TOPIC_NYBESKJED #DEPRECATED
       value: 'min-side.aapen-brukernotifikasjon-nyBeskjed-v1'
     - name: KAFKA_TOPIC_NYOPPGAVE #DEPRECATED
