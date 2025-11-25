@@ -9,7 +9,7 @@ data class Tekst(
 )
 
 data class EksternVarsling(
-    val prefererteKanaler: List<String>,
+    val preferertKanal: String?,
     val smsVarslingstekst: String?,
     val epostVarslingstittel: String?,
     val epostVarslingstekst: String?,
@@ -33,6 +33,13 @@ data class OpprettVarselRequest(
     val sensitivitet: String,
     val aktivFremTil: String?,
     val eksternVarsling: EksternVarsling,
+    val produsent: Produsent
+)
+
+data class InaktiverVarselRequest(
+    @SerializedName("@event_name")
+    val event_name: String,
+    val varselId: String,
     val produsent: Produsent
 )
 
