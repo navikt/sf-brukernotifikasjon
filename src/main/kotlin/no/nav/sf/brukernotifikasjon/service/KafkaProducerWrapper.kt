@@ -5,10 +5,12 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 class KafkaProducerWrapper<K, V>(
     private val topicName: String,
-    private val kafkaProducer: KafkaProducer<K, V>
+    private val kafkaProducer: KafkaProducer<K, V>,
 ) {
-
-    fun sendEvent(key: K, event: V) {
+    fun sendEvent(
+        key: K,
+        event: V,
+    ) {
         ProducerRecord(topicName, key, event).let { producerRecord ->
             try {
                 kafkaProducer.send(producerRecord)

@@ -42,9 +42,12 @@ object Metrics {
         }
     }
 
-    private fun registerGauge(name: String): Gauge {
-        return Gauge.build().name(name).help(name).register()
-    }
+    private fun registerGauge(name: String): Gauge =
+        Gauge
+            .build()
+            .name(name)
+            .help(name)
+            .register()
 
     init {
         DefaultExports.initialize()

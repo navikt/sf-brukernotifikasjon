@@ -28,16 +28,17 @@ class ApplicationTest {
         every { mockKafkaProducerDone.flushAndClose() } returns Unit
     }
 
-    private val application = Application(
-        mockTokenValidator,
-        mockBrukernotifikasjonService,
-        OldBrukernotifikasjonService(
-            naisNamespace = "namespace",
-            naisAppName = "appName",
-            kafkaProducerDone = mockKafkaProducerDone,
-            kafkaProducerInnboks = mockKafkaProducerInnboks
+    private val application =
+        Application(
+            mockTokenValidator,
+            mockBrukernotifikasjonService,
+            OldBrukernotifikasjonService(
+                naisNamespace = "namespace",
+                naisAppName = "appName",
+                kafkaProducerDone = mockKafkaProducerDone,
+                kafkaProducerInnboks = mockKafkaProducerInnboks,
+            ),
         )
-    )
     /*
 
     @Test

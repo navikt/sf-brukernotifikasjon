@@ -18,8 +18,8 @@ import org.apache.kafka.common.serialization.StringSerializer
 import java.util.Properties
 
 object KafkaConfig {
-    fun producerProps(): Properties {
-        return Properties().apply {
+    fun producerProps(): Properties =
+        Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env(env_KAFKA_BROKERS))
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env(env_KAFKA_SCHEMA_REGISTRY))
             put(ProducerConfig.CLIENT_ID_CONFIG, env(env_NAIS_APP_NAME) + "-varsel")
@@ -28,7 +28,10 @@ object KafkaConfig {
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env(env_KAFKA_SCHEMA_REGISTRY_USER)}:${env(env_KAFKA_SCHEMA_REGISTRY_PASSWORD)}")
+            put(
+                KafkaAvroSerializerConfig.USER_INFO_CONFIG,
+                "${env(env_KAFKA_SCHEMA_REGISTRY_USER)}:${env(env_KAFKA_SCHEMA_REGISTRY_PASSWORD)}",
+            )
             put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
             put(SaslConfigs.SASL_MECHANISM, "PLAIN")
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL")
@@ -41,5 +44,4 @@ object KafkaConfig {
             put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, env(env_KAFKA_CREDSTORE_PASSWORD))
             put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
         }
-    }
 }

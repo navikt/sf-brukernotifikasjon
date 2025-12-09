@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 data class Tekst(
     val spraakkode: String,
     val tekst: String,
-    val default: Boolean
+    val default: Boolean,
 )
 
 data class EksternVarsling(
@@ -13,13 +13,13 @@ data class EksternVarsling(
     val smsVarslingstekst: String?,
     val epostVarslingstittel: String?,
     val epostVarslingstekst: String?,
-    val kanBatches: Boolean?
+    val kanBatches: Boolean?,
 )
 
 data class Produsent(
     val cluster: String,
     val namespace: String,
-    val appnavn: String
+    val appnavn: String,
 )
 
 data class OpprettVarselRequest(
@@ -33,14 +33,14 @@ data class OpprettVarselRequest(
     val sensitivitet: String,
     val aktivFremTil: String?,
     val eksternVarsling: EksternVarsling,
-    val produsent: Produsent
+    val produsent: Produsent,
 )
 
 data class InaktiverVarselRequest(
     @SerializedName("@event_name")
     val event_name: String,
     val varselId: String,
-    val produsent: Produsent
+    val produsent: Produsent,
 )
 
 // TODO DEPRECATED MODELS:
@@ -48,7 +48,7 @@ data class DoneRequest(
     val eventId: String,
     val tidspunkt: String,
     val fodselsnummer: String,
-    val grupperingsId: String
+    val grupperingsId: String,
 )
 
 data class InnboksRequest(
@@ -63,5 +63,5 @@ data class InnboksRequest(
     val grupperingsId: String,
     val epostVarslingstekst: String,
     val epostVarslingstittel: String,
-    val smsVarslingstekst: String
+    val smsVarslingstekst: String,
 )

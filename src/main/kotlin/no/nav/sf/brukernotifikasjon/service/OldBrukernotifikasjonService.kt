@@ -37,16 +37,16 @@ class OldBrukernotifikasjonService(
         KafkaProducerWrapper(
             env(config_KAFKA_TOPIC_DONE),
             KafkaProducer<NokkelInput, DoneInput>(
-                OldKafkaConfig.producerProps(Eventtype.DONE)
-            )
+                OldKafkaConfig.producerProps(Eventtype.DONE),
+            ),
         ),
     private val kafkaProducerInnboks: KafkaProducerWrapper<NokkelInput, InnboksInput> =
         KafkaProducerWrapper(
             env(config_KAFKA_TOPIC_INNBOKS),
             KafkaProducer<NokkelInput, InnboksInput>(
-                OldKafkaConfig.producerProps(Eventtype.INNBOKS)
-            )
-        )
+                OldKafkaConfig.producerProps(Eventtype.INNBOKS),
+            ),
+        ),
 ) {
     private val gson = Gson()
 
@@ -61,21 +61,24 @@ class OldBrukernotifikasjonService(
             val innboksRequest = gson.fromJson(request.bodyString(), Array<InnboksRequest>::class.java)
             val result: MutableList<InnboksInput> = mutableListOf()
             innboksRequest.forEach {
-                val innboksbuilder = InnboksInputBuilder()
-                    .withEksternVarsling(it.eksternVarsling)
-                    .withSikkerhetsnivaa(it.sikkerhetsnivaa)
-                    .withTekst(it.tekst)
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                    .withEpostVarslingstekst(it.epostVarslingstekst)
-                    .withEpostVarslingstittel(it.epostVarslingstittel)
-                    .withSmsVarslingstekst(it.smsVarslingstekst)
+                val innboksbuilder =
+                    InnboksInputBuilder()
+                        .withEksternVarsling(it.eksternVarsling)
+                        .withSikkerhetsnivaa(it.sikkerhetsnivaa)
+                        .withTekst(it.tekst)
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
+                        .withEpostVarslingstekst(it.epostVarslingstekst)
+                        .withEpostVarslingstittel(it.epostVarslingstittel)
+                        .withSmsVarslingstekst(it.smsVarslingstekst)
                 if (it.link.isNotEmpty()) {
                     innboksbuilder.withLink(URL(it.link))
                 }
                 if (it.prefererteKanaler.isNotEmpty()) {
                     innboksbuilder.withPrefererteKanaler(
-                        *it.prefererteKanaler.split(",").map { PreferertKanal.valueOf(it) }
-                            .toTypedArray()
+                        *it.prefererteKanaler
+                            .split(",")
+                            .map { PreferertKanal.valueOf(it) }
+                            .toTypedArray(),
                     )
                 }
                 val innboks = innboksbuilder.build()
@@ -83,7 +86,7 @@ class OldBrukernotifikasjonService(
                     it.eventId,
                     it.grupperingsId,
                     it.fodselsnummer,
-                    innboks
+                    innboks,
                 )
                 result.add(innboks)
             }
@@ -103,9 +106,10 @@ class OldBrukernotifikasjonService(
             val doneRequest = gson.fromJson(request.bodyString(), Array<DoneRequest>::class.java)
             val result: MutableList<DoneInput> = mutableListOf()
             doneRequest.forEach {
-                val done = DoneInputBuilder()
-                    .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
-                    .build()
+                val done =
+                    DoneInputBuilder()
+                        .withTidspunkt(LocalDateTime.ofInstant(Instant.parse(it.tidspunkt), ZoneOffset.UTC))
+                        .build()
                 sendDone(it.eventId, it.grupperingsId, it.fodselsnummer, done)
                 result.add(done)
             }
@@ -118,13 +122,25 @@ class OldBrukernotifikasjonService(
         }
     }
 
-    fun sendInnboks(eventId: String, grupperingsId: String, fodselsnummer: String, innboks: InnboksInput) =
-        kafkaProducerInnboks.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), innboks)
+    fun sendInnboks(
+        eventId: String,
+        grupperingsId: String,
+        fodselsnummer: String,
+        innboks: InnboksInput,
+    ) = kafkaProducerInnboks.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), innboks)
 
-    fun sendDone(eventId: String, grupperingsId: String, fodselsnummer: String, done: DoneInput) =
-        kafkaProducerDone.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), done)
+    fun sendDone(
+        eventId: String,
+        grupperingsId: String,
+        fodselsnummer: String,
+        done: DoneInput,
+    ) = kafkaProducerDone.sendEvent(createKey(eventId, grupperingsId, fodselsnummer), done)
 
-    fun createKey(eventId: String, grupperingsId: String, fodselsnummer: String): NokkelInput =
+    fun createKey(
+        eventId: String,
+        grupperingsId: String,
+        fodselsnummer: String,
+    ): NokkelInput =
         NokkelInputBuilder()
             .withEventId(eventId)
             .withFodselsnummer(fodselsnummer)
@@ -134,10 +150,12 @@ class OldBrukernotifikasjonService(
             .build()
 
     init {
-        Runtime.getRuntime()
+        Runtime
+            .getRuntime()
             .addShutdownHook(
                 object : Thread() {
                     private val log = KotlinLogging.logger { }
+
                     override fun run() {
                         log.info { "Trigger shutdown hook" }
                         shuttingDown = true
@@ -146,7 +164,7 @@ class OldBrukernotifikasjonService(
                         kafkaProducerInnboks.flushAndClose()
                         kafkaProducerDone.flushAndClose()
                     }
-                }
+                },
             )
     }
 }

@@ -33,15 +33,16 @@ class Application(
 
     fun apiServer(port: Int): Http4kServer = api().asServer(Netty(port))
 
-    fun api(): HttpHandler = routes(
-        "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
-        "/internal/isReady" bind Method.GET to isReadyHandler,
-        "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
-        "/varsel" authbind Method.POST to brukernotifikasjonService.opprettVarselHandler,
-        "/inaktiver" authbind Method.POST to brukernotifikasjonService.inaktiverVarselHandler,
-        "/innboks" authbind Method.POST to oldBrukernotifikasjonService.innboksHandler, // TODO DEPRECATED
-        "/done" authbind Method.POST to oldBrukernotifikasjonService.doneHandler, // TODO DEPRECATED
-    )
+    fun api(): HttpHandler =
+        routes(
+            "/internal/isAlive" bind Method.GET to { Response(Status.OK) },
+            "/internal/isReady" bind Method.GET to isReadyHandler,
+            "/internal/metrics" bind Method.GET to Metrics.metricsHandler,
+            "/varsel" authbind Method.POST to brukernotifikasjonService.opprettVarselHandler,
+            "/inaktiver" authbind Method.POST to brukernotifikasjonService.inaktiverVarselHandler,
+            "/innboks" authbind Method.POST to oldBrukernotifikasjonService.innboksHandler, // TODO DEPRECATED
+            "/done" authbind Method.POST to oldBrukernotifikasjonService.doneHandler, // TODO DEPRECATED
+        )
 
     private val isReadyHandler: HttpHandler = {
         if (shuttingDown) {
@@ -56,7 +57,11 @@ class Application(
      */
     infix fun String.authbind(method: Method) = AuthRouteBuilder(this, method, tokenValidator)
 
-    data class AuthRouteBuilder(val path: String, val method: Method, private val tokenValidator: TokenValidator) {
+    data class AuthRouteBuilder(
+        val path: String,
+        val method: Method,
+        private val tokenValidator: TokenValidator,
+    ) {
         infix fun to(action: HttpHandler): RoutingHttpHandler =
             PathMethod(path, method) to { request ->
                 val token = tokenValidator.firstValidToken(request)
