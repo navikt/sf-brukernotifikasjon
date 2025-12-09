@@ -20,7 +20,7 @@ shadowJar {
 }
 
 application {
-    mainClassName = 'no.nav.sf.brukernotifikasjon.BootstrapKt'
+    mainClass = 'no.nav.sf.brukernotifikasjon.BootstrapKt'
 }
 
 run {
@@ -79,6 +79,7 @@ dependencies {
     implementation "io.prometheus:simpleclient_common:0.8.1"
     implementation "io.prometheus:simpleclient_hotspot:0.8.1"
 
+    implementation "org.apache.commons:commons-lang3:3.18.0"
     implementation "org.xerial.snappy:snappy-java:1.1.10.4" //Desired transient snappy to kafka-clients above
     implementation "org.apache.avro:avro:1.11.5" //Desired transient avro to serializer above
     implementation "no.nav.tms.varsel:kotlin-builder:2.1.1"
