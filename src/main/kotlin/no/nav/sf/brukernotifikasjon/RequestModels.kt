@@ -9,7 +9,7 @@ data class Tekst(
 )
 
 data class EksternVarsling(
-    val preferertKanal: String?,
+    val prefererteKanaler: List<String>?,
     val smsVarslingstekst: String?,
     val epostVarslingstittel: String?,
     val epostVarslingstekst: String?,
