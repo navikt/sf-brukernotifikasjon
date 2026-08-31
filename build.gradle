@@ -94,7 +94,7 @@ configurations.all {
     resolutionStrategy {
         capabilitiesResolution.withCapability("org.lz4:lz4-java") { details ->
             // Prefer the patched fork
-            details.select("at.yawk.lz4:lz4-java:1.10.1")
+            details.select("at.yawk.lz4:lz4-java:1.11.1")
         }
     }
 }
