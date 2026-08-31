@@ -19,6 +19,9 @@ object Metrics {
     val requestsDone = registerGauge("request_done") // TODO DEPRECATED
     val requestsInnboks = registerGauge("request_innboks") // TODO DEPRECATED
 
+    val requestsVarsel = registerGauge("request_varsel")
+    val requestsInaktiver = registerGauge("request_inaktiver")
+
     // Example: Add any future TMS-event related metrics here
     // val requestsVarsel = registerGauge("request_varsel")
 

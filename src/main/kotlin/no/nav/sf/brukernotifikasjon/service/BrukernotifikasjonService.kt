@@ -3,6 +3,7 @@ package no.nav.sf.brukernotifikasjon.service
 import com.google.gson.Gson
 import mu.KotlinLogging
 import no.nav.sf.brukernotifikasjon.InaktiverVarselRequest
+import no.nav.sf.brukernotifikasjon.Metrics
 import no.nav.sf.brukernotifikasjon.OpprettVarselRequest
 import no.nav.sf.brukernotifikasjon.config.KafkaConfig
 import no.nav.sf.brukernotifikasjon.config_CONTEXT
@@ -22,6 +23,7 @@ class BrukernotifikasjonService(
     private val devContext: Boolean = System.getenv(config_CONTEXT) == "DEV"
 
     val opprettVarselHandler: HttpHandler = { request ->
+        Metrics.requestsVarsel.inc()
         try {
             log.info("Kall til Opprett Varsel mottatt")
             val varselRequest = gson.fromJson(request.bodyString(), OpprettVarselRequest::class.java)
@@ -40,6 +42,7 @@ class BrukernotifikasjonService(
     }
 
     val inaktiverVarselHandler: HttpHandler = { request ->
+        Metrics.requestsInaktiver.inc()
         try {
             log.info("Kall til Inaktiver Varsel mottatt")
             val inaktiverRequest = gson.fromJson(request.bodyString(), InaktiverVarselRequest::class.java)
