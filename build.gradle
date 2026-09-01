@@ -77,6 +77,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind:2.22.1" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
     implementation "org.apache.httpcomponents.core5:httpcore5:5.4.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
+    implementation "org.apache.httpcomponents.client5:httpclient5:5.6.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
 
     implementation "io.github.microutils:kotlin-logging:3.0.5"
     implementation "ch.qos.logback:logback-classic:1.5.34"
