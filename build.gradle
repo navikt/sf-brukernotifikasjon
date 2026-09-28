@@ -73,8 +73,8 @@ dependencies {
     implementation "org.apache.kafka:kafka-clients:4.3.0"
     implementation "io.confluent:kafka-avro-serializer:8.3.1"
 
-    implementation "com.fasterxml.jackson.core:jackson-core:2.22.1" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.22.1" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
+    implementation "com.fasterxml.jackson.core:jackson-core:2.22.2" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.22.2" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
     implementation "org.apache.httpcomponents.core5:httpcore5-h2:5.4.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
     implementation "org.apache.httpcomponents.core5:httpcore5:5.4.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
     implementation "org.apache.httpcomponents.client5:httpclient5:5.6.3" // Transitive to io.confluent:kafka-avro-serializer 8.3.1
