@@ -75,7 +75,7 @@ jobs:
   deploy-prod:
     name: Deploy to NAIS prod gcp
     needs: build
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -89,4 +89,3 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .nais/prod.yaml
           VAR: image=${{ needs.build.outputs.image }}
-      
