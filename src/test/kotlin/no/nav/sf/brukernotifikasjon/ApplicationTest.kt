@@ -1,7 +1,10 @@
 package no.nav.sf.brukernotifikasjon
 
+import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
@@ -10,7 +13,17 @@ import no.nav.sf.brukernotifikasjon.service.BrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.service.KafkaProducerWrapper
 import no.nav.sf.brukernotifikasjon.service.OldBrukernotifikasjonService
 import no.nav.sf.brukernotifikasjon.token.TokenValidator
+import org.http4k.core.MemoryBody
+import org.http4k.core.Method.GET
+import org.http4k.core.Method.POST
+import org.http4k.core.Request
+import org.http4k.core.Response
+import org.http4k.core.Status.Companion.EXPECTATION_FAILED
+import org.http4k.core.Status.Companion.OK
+import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class ApplicationTest {
     private val mockTokenValidator = mockk<TokenValidator>()
@@ -26,6 +39,8 @@ class ApplicationTest {
         every { mockTokenValidator.firstValidToken(any()) } returns mockToken
         every { mockKafkaProducerInnboks.flushAndClose() } returns Unit
         every { mockKafkaProducerDone.flushAndClose() } returns Unit
+        every { mockBrukernotifikasjonService.opprettVarselHandler } returns { Response(OK) }
+        every { mockBrukernotifikasjonService.inaktiverVarselHandler } returns { Response(OK) }
     }
 
     private val application =
@@ -39,10 +54,9 @@ class ApplicationTest {
                 kafkaProducerInnboks = mockKafkaProducerInnboks,
             ),
         )
-    /*
 
     @Test
-    fun `GET isReady isAlive stop and metrics should all answer OK`() {
+    fun `GET isReady isAlive and metrics should all answer OK`() {
         assertEquals(OK, application.api().invoke(Request(GET, "/internal/isReady")).status)
 
         assertEquals(OK, application.api().invoke(Request(GET, "/internal/isAlive")).status)
@@ -72,6 +86,7 @@ class ApplicationTest {
         val response = application.api().invoke(Request(POST, "/innboks").body(payload))
 
         assertEquals(UNAUTHORIZED, response.status)
+        verify(exactly = 0) { mockKafkaProducerInnboks.sendEvent(any(), any()) }
     }
 
     @Test
@@ -82,14 +97,16 @@ class ApplicationTest {
         val response = application.api().invoke(Request(POST, "/innboks").body(payload))
 
         assertEquals(EXPECTATION_FAILED, response.status)
+        verify(exactly = 0) { mockKafkaProducerInnboks.sendEvent(any(), any()) }
     }
 
     @Test
     fun `POST innboks with payload should produce eventId on Kafka`() {
         val myEventId = "461a85ac-2f3f-494a-a37c-2cbee6dcf640"
-        val payload = createTestInnboksRequest(
-            eventId = myEventId
-        )
+        val payload =
+            createTestInnboksRequest(
+                eventId = myEventId,
+            )
 
         val nokkelInputSlot: CapturingSlot<NokkelInput> = slot()
         every { mockKafkaProducerInnboks.sendEvent(capture(nokkelInputSlot), any()) } returns Unit
@@ -99,6 +116,7 @@ class ApplicationTest {
         val capturedNokkelInput = nokkelInputSlot.captured
 
         verify(exactly = 1) { mockKafkaProducerInnboks.sendEvent(any(), any()) }
+        assertEquals(OK, response.status)
         assertEquals(myEventId, capturedNokkelInput.getEventId())
     }
 
@@ -107,11 +125,12 @@ class ApplicationTest {
         val myTekst = "myTekst"
         val myLink = "http://my.link"
         val myChannel = "EPOST"
-        val payload = createTestInnboksRequest(
-            tekst = myTekst,
-            link = myLink,
-            channels = myChannel
-        )
+        val payload =
+            createTestInnboksRequest(
+                tekst = myTekst,
+                link = myLink,
+                channels = myChannel,
+            )
 
         val innboksInputSlot: CapturingSlot<InnboksInput> = slot()
         every { mockKafkaProducerInnboks.sendEvent(any(), capture(innboksInputSlot)) } returns Unit
@@ -121,6 +140,7 @@ class ApplicationTest {
         val capturedInnboksInput = innboksInputSlot.captured
 
         verify(exactly = 1) { mockKafkaProducerInnboks.sendEvent(any(), any()) }
+        assertEquals(OK, response.status)
         assertEquals(myTekst, capturedInnboksInput.getTekst())
         assertEquals(myLink, capturedInnboksInput.getLink())
         assertEquals(myChannel, capturedInnboksInput.getPrefererteKanaler().first())
@@ -128,7 +148,7 @@ class ApplicationTest {
 
     @Test
     fun `POST done with valid token should answer OK`() {
-        val payload = createTestInnboksRequest()
+        val payload = createTestDoneRequest()
         every { mockKafkaProducerDone.sendEvent(any(), any()) } returns Unit
 
         val response = application.api().invoke(Request(POST, "/done").body(payload))
@@ -148,6 +168,7 @@ class ApplicationTest {
         val response = application.api().invoke(Request(POST, "/done").body(payload))
 
         assertEquals(UNAUTHORIZED, response.status)
+        verify(exactly = 0) { mockKafkaProducerDone.sendEvent(any(), any()) }
     }
 
     @Test
@@ -158,14 +179,16 @@ class ApplicationTest {
         val response = application.api().invoke(Request(POST, "/done").body(payload))
 
         assertEquals(EXPECTATION_FAILED, response.status)
+        verify(exactly = 0) { mockKafkaProducerDone.sendEvent(any(), any()) }
     }
 
     @Test
     fun `POST done with payload should produce eventId on Kafka`() {
         val myEventId = "461a85ac-2f3f-494a-a37c-2cbee6dcf640"
-        val payload = createTestDoneRequest(
-            eventId = myEventId
-        )
+        val payload =
+            createTestDoneRequest(
+                eventId = myEventId,
+            )
 
         val nokkelInputSlot: CapturingSlot<NokkelInput> = slot()
         every { mockKafkaProducerDone.sendEvent(capture(nokkelInputSlot), any()) } returns Unit
@@ -175,15 +198,17 @@ class ApplicationTest {
         val capturedNokkelInput = nokkelInputSlot.captured
 
         verify(exactly = 1) { mockKafkaProducerDone.sendEvent(any(), any()) }
+        assertEquals(OK, response.status)
         assertEquals(myEventId, capturedNokkelInput.getEventId())
     }
 
     @Test
     fun `POST done with payload should produce DoneInput value on Kafka`() {
         val unixEpochTime = "1970-01-01T00:00:00Z"
-        val payload = createTestDoneRequest(
-            tidspunkt = unixEpochTime
-        )
+        val payload =
+            createTestDoneRequest(
+                tidspunkt = unixEpochTime,
+            )
 
         val doneInputSlot: CapturingSlot<DoneInput> = slot()
         every { mockKafkaProducerDone.sendEvent(any(), capture(doneInputSlot)) } returns Unit
@@ -193,8 +218,7 @@ class ApplicationTest {
         val capturedDoneInput = doneInputSlot.captured
 
         verify(exactly = 1) { mockKafkaProducerDone.sendEvent(any(), any()) }
-
-        // 0 is long representation of unix epoch time
+        assertEquals(OK, response.status)
         assertEquals(0L, capturedDoneInput.getTidspunkt())
     }
 
@@ -202,43 +226,41 @@ class ApplicationTest {
         eventId: String = "b6303e3a-83b4-11ee-b962-0242ac120002",
         tekst: String = "tekst",
         link: String = "http://li.nk",
-        channels: String = "SMS"
-    ) =
-        MemoryBody(
-            """[
-                  {
-                     "eventId":"$eventId",
-                     "eksternVarsling":true,
-                     "link":"$link",
-                     "sikkerhetsnivaa":4,
-                     "tekst":"$tekst",
-                     "prefererteKanaler":"$channels",
-                     "tidspunkt":"2020-01-01T10:00:00Z",
-                     "fodselsnummer":"22067612345",
-                     "grupperingsId":"id",
-                     "epostVarslingstekst":"epostVarslingstekst",
-                     "epostVarslingstittel":"epostVarslingstittel",
-                     "smsVarslingstekst":"smsVarslingstekst"
-                  }
-                ]
-            """.trimIndent()
-        )
+        channels: String = "SMS",
+    ) = MemoryBody(
+        """
+        [
+          {
+             "eventId":"$eventId",
+             "eksternVarsling":true,
+             "link":"$link",
+             "sikkerhetsnivaa":4,
+             "tekst":"$tekst",
+             "prefererteKanaler":"$channels",
+             "tidspunkt":"2020-01-01T10:00:00Z",
+             "fodselsnummer":"22067612345",
+             "grupperingsId":"id",
+             "epostVarslingstekst":"epostVarslingstekst",
+             "epostVarslingstittel":"epostVarslingstittel",
+             "smsVarslingstekst":"smsVarslingstekst"
+          }
+        ]
+        """.trimIndent(),
+    )
 
     private fun createTestDoneRequest(
         eventId: String = "b6303e3a-83b4-11ee-b962-0242ac120002",
-        tidspunkt: String = "2020-01-01T10:00:00Z"
-    ) =
-        MemoryBody(
-            """[
-                  {
-                     "eventId":"$eventId",
-                     "tidspunkt":"$tidspunkt",
-                     "fodselsnummer":"22067612345",
-                     "grupperingsId":"id"
-                  }
-                ]
-            """.trimIndent()
-        )
-
-     */
+        tidspunkt: String = "2020-01-01T10:00:00Z",
+    ) = MemoryBody(
+        """
+        [
+          {
+             "eventId":"$eventId",
+             "tidspunkt":"$tidspunkt",
+             "fodselsnummer":"22067612345",
+             "grupperingsId":"id"
+          }
+        ]
+        """.trimIndent(),
+    )
 }
